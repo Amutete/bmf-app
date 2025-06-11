@@ -112,7 +112,7 @@
         <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm text-center"><h3 class="font-bold text-xl mb-3">Deposit Instructions</h3><p class="text-gray-600 mb-4">Send your investment via M-Pesa to:</p><p class="font-bold text-2xl text-orange-500 bg-gray-100 py-2 rounded-lg mb-6">0721 727 235</p><p class="text-sm text-gray-500 mb-4">After sending, click below to notify the admin of your transaction.</p><button id="complete-transaction-btn" class="w-full bg-green-500 text-white font-bold py-3 rounded-lg hover:bg-green-600 shadow-lg transition">I Have Paid, Notify Admin</button><button id="close-modal-btn" class="mt-3 text-gray-500 font-semibold">Close</button></div>
     </div>
     <div id="withdraw-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-40 p-4">
-         <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm text-center"><h3 class="font-bold text-xl mb-3">Request Withdrawal</h3><p class="text-gray-600 mb-4">Enter the amount you wish to withdraw.</p><input type="number" id="withdraw-amount" placeholder="Ksh 0.00" class="w-full text-center px-3 py-2 text-lg font-bold bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"><button id="submit-withdrawal-btn" class="mt-4 w-full bg-orange-500 text-white font-bold py-3 rounded-lg hover:bg-orange-600 shadow-lg transition">Submit Request</button><button id="close-withdraw-modal-btn" class="mt-3 text-gray-500 font-semibold">Cancel</button></div>
+         <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm text-center"><h3 class="font-bold text-xl mb-3">Request Withdrawal</h3><p class="text-gray-600 mb-4">Enter the amount you wish to withdraw.</p><input type="number" id="withdraw-amount" placeholder="Ksh 0.00" class="w-full text-center px-3 py-2 text-lg font-bold bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"><button id="submit-withdrawal-btn" class="mt-4 w-full bg-orange-500 text-white font-bold py-3 rounded-lg hover:bg-orange-600 shadow-lg transition">Submit Request</button><button id="cancel-withdraw-modal-btn" class="mt-3 text-gray-500 font-semibold">Cancel</button></div>
     </div>
     <div id="message-modal" class="hidden fixed top-5 right-5 bg-green-500 text-white py-2 px-4 rounded-lg shadow-xl z-50 animate-pulse"><p id="message-modal-text"></p></div>
 
@@ -158,7 +158,7 @@
             referralLinkInput: document.getElementById('referral-link-input'), copyReferralBtn: document.getElementById('copy-referral-btn'), workContent: document.getElementById('work-content'), taskFeedback: document.getElementById('task-feedback'), contractCountdownDisplay: document.getElementById('contract-countdown-display'),
             transactionLog: document.getElementById('transaction-log'), myTeamList: document.getElementById('my-team-list'), profitTasks: document.getElementById('profit-tasks'), profitReferrals: document.getElementById('profit-referrals'),
             depositBtn: document.getElementById('deposit-btn'), depositModal: document.getElementById('deposit-modal'), closeModalBtn: document.getElementById('close-modal-btn'), completeTransactionBtn: document.getElementById('complete-transaction-btn'),
-            withdrawBtn: document.getElementById('withdraw-btn'), withdrawModal: document.getElementById('withdraw-modal'), closeWithdrawModalBtn: document.getElementById('close-withdraw-modal-btn'), submitWithdrawalBtn: document.getElementById('submit-withdrawal-btn'), withdrawAmountInput: document.getElementById('withdraw-amount'),
+            withdrawBtn: document.getElementById('withdraw-btn'), withdrawModal: document.getElementById('withdraw-modal'), cancelWithdrawModalBtn: document.getElementById('cancel-withdraw-modal-btn'), submitWithdrawalBtn: document.getElementById('submit-withdrawal-btn'), withdrawAmountInput: document.getElementById('withdraw-amount'),
             messageModal: document.getElementById('message-modal'), messageModalText: document.getElementById('message-modal-text')
         };
 
@@ -376,7 +376,7 @@
         });
 
         DOMElements.withdrawBtn.addEventListener('click', () => DOMElements.withdrawModal.classList.remove('hidden'));
-        DOMElements.closeWithdrawModalBtn.addEventListener('click', () => DOMElements.withdrawModal.classList.add('hidden'));
+        DOMElements.cancelWithdrawModalBtn.addEventListener('click', () => DOMElements.withdrawModal.classList.add('hidden'));
         DOMElements.submitWithdrawalBtn.addEventListener('click', async () => {
             const amount = parseFloat(DOMElements.withdrawAmountInput.value);
             if(isNaN(amount) || amount <= 0) { showMessage('Please enter a valid amount.', true); return; }
