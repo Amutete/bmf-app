@@ -18,10 +18,6 @@
 </head>
 <body class="bg-gray-100">
 
-    <div id="loading-spinner" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-orange-500"></div>
-    </div>
-
     <div id="auth-container" class="min-h-screen bg-gradient-to-br from-orange-400 to-orange-600 flex flex-col items-center justify-center p-4">
         <h1 class="text-7xl font-black text-white bmf-logo-text mb-6">BMF</h1>
         <div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-6">
@@ -112,7 +108,7 @@
         <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm text-center"><h3 class="font-bold text-xl mb-3">Deposit Instructions</h3><p class="text-gray-600 mb-4">Send your investment via M-Pesa to:</p><p class="font-bold text-2xl text-orange-500 bg-gray-100 py-2 rounded-lg mb-6">0721 727 235</p><p class="text-sm text-gray-500 mb-4">After sending, click below to notify the admin of your transaction.</p><button id="complete-transaction-btn" class="w-full bg-green-500 text-white font-bold py-3 rounded-lg hover:bg-green-600 shadow-lg transition">I Have Paid, Notify Admin</button><button id="close-modal-btn" class="mt-3 text-gray-500 font-semibold">Close</button></div>
     </div>
     <div id="withdraw-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-40 p-4">
-         <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm text-center"><h3 class="font-bold text-xl mb-3">Request Withdrawal</h3><p class="text-gray-600 mb-4">Enter the amount you wish to withdraw.</p><input type="number" id="withdraw-amount" placeholder="Ksh 0.00" class="w-full text-center px-3 py-2 text-lg font-bold bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"><button id="submit-withdrawal-btn" class="mt-4 w-full bg-orange-500 text-white font-bold py-3 rounded-lg hover:bg-orange-600 shadow-lg transition">Submit Request</button><button id="cancel-withdraw-modal-btn" class="mt-3 text-gray-500 font-semibold">Cancel</button></div>
+         <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm text-center"><h3 class="font-bold text-xl mb-3">Request Withdrawal</h3><p class="text-gray-600 mb-4">Enter the amount you wish to withdraw.</p<input type="number" id="withdraw-amount" placeholder="Ksh 0.00" class="w-full text-center px-3 py-2 text-lg font-bold bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"><button id="submit-withdrawal-btn" class="mt-4 w-full bg-orange-500 text-white font-bold py-3 rounded-lg hover:bg-orange-600 shadow-lg transition">Submit Request</button><button id="cancel-withdraw-modal-btn" class="mt-3 text-gray-500 font-semibold">Cancel</button></div>
     </div>
     <div id="message-modal" class="hidden fixed top-5 right-5 bg-green-500 text-white py-2 px-4 rounded-lg shadow-xl z-50 animate-pulse"><p id="message-modal-text"></p></div>
 
@@ -151,7 +147,7 @@
         } catch (error) { console.error("Firebase init failed:", error); }
        
         const DOMElements = {
-            loadingSpinner: document.getElementById('loading-spinner'), authContainer: document.getElementById('auth-container'), appContainer: document.getElementById('app-container'), errorMessage: document.getElementById('error-message'),
+            authContainer: document.getElementById('auth-container'), appContainer: document.getElementById('app-container'), errorMessage: document.getElementById('error-message'),
             loginTabBtn: document.getElementById('login-tab-btn'), signupTabBtn: document.getElementById('signup-tab-btn'), loginForm: document.getElementById('login-form'), signupForm: document.getElementById('signup-form'),
             logoutBtn: document.getElementById('logout-btn'), navItems: document.querySelectorAll('.nav-item'), pages: { home: document.getElementById('page-home'), work: document.getElementById('page-work'), profit: document.getElementById('page-profit'), my: document.getElementById('page-my') },
             userNameDisplay: document.getElementById('user-name-display'), totalAssetsDisplay: document.getElementById('total-assets-display'), myUsername: document.getElementById('my-username'), myEmail: document.getElementById('my-email'), myUserid: document.getElementById('my-userid'),
@@ -162,7 +158,8 @@
             messageModal: document.getElementById('message-modal'), messageModalText: document.getElementById('message-modal-text')
         };
 
-        const showLoading = (isLoading) => DOMElements.loadingSpinner.style.display = isLoading ? 'flex' : 'none';
+        const showLoading = (isLoading) => {}; // Spinner disabled
+
         const showMessage = (text, isError = false) => {
             DOMElements.messageModalText.textContent = text;
             DOMElements.messageModal.classList.toggle('bg-red-500', isError);
@@ -286,16 +283,33 @@
             else startTaskTimer();
         };
 
-taskTimerInterval = setInterval(() => {
-    if (Math.round((taskTimerEndTime - Date.now()) / 1000) <= 0) {
-        clearInterval(taskTimerInterval); 
-        taskTimerInterval = null; 
-        renderWorkPage(currentUserData);
-    } else {
-        const secondsLeft = Math.round((taskTimerEndTime - Date.now()) / 1000);
-        document.getElementById('work-button')?.textContent = `Working... (${secondsLeft}s)`;
-    }
-}, 1000);
+        const startTaskTimer = () => {
+            const levelInfo = INVESTMENT_LEVELS[currentUserData.investmentLevel];
+            let taskDuration = 10; // Default 10 seconds
+            if(levelInfo.name === 'Freelance 1') taskDuration = 15;
+            if(levelInfo.name === 'Freelance 2') taskDuration = 15;
+            if(levelInfo.name === 'Freelance 3') taskDuration = 20;
+            if(levelInfo.name === 'Freelance 4') taskDuration = 20;
+            if(levelInfo.name === 'Teamleader') taskDuration = 25;
+            if(levelInfo.name === 'Supervisor') taskDuration = 30;
+            if(levelInfo.name === 'Manager') taskDuration = 35;
+            
+            taskTimerEndTime = Date.now() + taskDuration * 1000;
+            renderWorkPage(currentUserData);
+            
+            if (taskTimerInterval) clearInterval(taskTimerInterval);
+            taskTimerInterval = setInterval(() => {
+                const secondsLeft = Math.round((taskTimerEndTime - Date.now()) / 1000);
+                if (secondsLeft <= 0) {
+                    clearInterval(taskTimerInterval);
+                    taskTimerInterval = null;
+                    renderWorkPage(currentUserData);
+                } else {
+                    const workButton = document.getElementById('work-button');
+                    if(workButton) workButton.textContent = `Working... (${secondsLeft}s)`;
+                }
+            }, 1000);
+        };
         
         const completeTask = async () => {
             showLoading(true); taskTimerEndTime = null;
@@ -400,7 +414,14 @@ taskTimerInterval = setInterval(() => {
         });
 
         DOMElements.navItems.forEach(item => item.addEventListener('click', () => switchPage(item.dataset.page)));
-        switchAuthTab('login');
+        
+        // --- FIX STARTS HERE ---
+        // Added event listeners for the auth tabs
+        DOMElements.loginTabBtn.addEventListener('click', () => switchAuthTab('login'));
+        DOMElements.signupTabBtn.addEventListener('click', () => switchAuthTab('signup'));
+        // --- FIX ENDS HERE ---
+
+        switchAuthTab('login'); // Set initial tab to login
         showLoading(true);
     </script>
 </body>
