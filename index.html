@@ -286,16 +286,16 @@
             else startTaskTimer();
         };
 
-        const startTaskTimer = () => {
-            const timerDuration = 5 * 1000; // 5 seconds for live app demo
-            taskTimerEndTime = Date.now() + timerDuration;
-            renderWorkPage(currentUserData); 
-            taskTimerInterval = setInterval(() => {
-                if (Math.round((taskTimerEndTime - Date.now()) / 1000) <= 0) {
-                    clearInterval(taskTimerInterval); taskTimerInterval = null; renderWorkPage(currentUserData);
-                } else { document.getElementById('work-button')?.textContent = `Working... (${Math.round((taskTimerEndTime - Date.now())/1000)}s)`; }
-            }, 1000);
-        };
+taskTimerInterval = setInterval(() => {
+    if (Math.round((taskTimerEndTime - Date.now()) / 1000) <= 0) {
+        clearInterval(taskTimerInterval); 
+        taskTimerInterval = null; 
+        renderWorkPage(currentUserData);
+    } else {
+        const secondsLeft = Math.round((taskTimerEndTime - Date.now()) / 1000);
+        document.getElementById('work-button')?.textContent = `Working... (${secondsLeft}s)`;
+    }
+}, 1000);
         
         const completeTask = async () => {
             showLoading(true); taskTimerEndTime = null;
