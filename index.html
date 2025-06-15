@@ -18,7 +18,7 @@
 </head>
 <body class="bg-gray-100">
 
-    <div id="auth-container" style="display: none;" class="min-h-screen bg-gradient-to-br from-orange-400 to-orange-600 flex flex-col items-center justify-center p-4">
+    <div id="auth-container" class="min-h-screen bg-gradient-to-br from-orange-400 to-orange-600 flex flex-col items-center justify-center p-4">
         <h1 class="text-7xl font-black text-white bmf-logo-text mb-6">BMF</h1>
         <div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-6">
             <div class="flex border-b border-gray-200">
@@ -45,8 +45,8 @@
 
     <div id="app-container" class="hidden w-full max-w-lg mx-auto bg-white flex-col h-screen">
         <header class="bg-orange-500 text-white p-4 shadow-md flex justify-between items-center z-10 sticky top-0">
-             <div><p class="text-sm">Welcome back,</p><h2 id="user-name-display" class="font-bold text-xl">User</h2></div>
-             <div class="text-right"><p class="text-sm">Total Assets</p><h2 id="total-assets-display" class="font-bold text-xl">Ksh 0.00</h2></div>
+            <div><p class="text-sm">Welcome back,</p><h2 id="user-name-display" class="font-bold text-xl">User</h2></div>
+            <div class="text-right"><p class="text-sm">Total Assets</p><h2 id="total-assets-display" class="font-bold text-xl">Ksh 0.00</h2></div>
         </header>
 
         <main class="flex-grow p-4 overflow-y-auto pb-24">
@@ -104,189 +104,335 @@
         </footer>
     </div>
     
-    <div id="deposit-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-40 p-4"><div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm text-center"><h3 class="font-bold text-xl mb-3">Deposit Instructions</h3><p class="text-gray-600 mb-4">Send your investment via M-Pesa to:</p><p class="font-bold text-2xl text-orange-500 bg-gray-100 py-2 rounded-lg mb-6">0721 727 235</p><p class="text-sm text-gray-500 mb-4">After sending, click below to notify the admin of your transaction.</p><button id="complete-transaction-btn" class="w-full bg-green-500 text-white font-bold py-3 rounded-lg hover:bg-green-600 shadow-lg transition">I Have Paid, Notify Admin</button><button id="close-modal-btn" class="mt-3 text-gray-500 font-semibold">Close</button></div></div>
-    <div id="withdraw-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-40 p-4"><div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm text-center"><h3 class="font-bold text-xl mb-3">Request Withdrawal</h3><p class="text-gray-600 mb-4">Enter the amount you wish to withdraw.</p><input type="number" id="withdraw-amount" placeholder="Ksh 0.00" class="w-full text-center px-3 py-2 text-lg font-bold bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"><button id="submit-withdrawal-btn" class="mt-4 w-full bg-orange-500 text-white font-bold py-3 rounded-lg hover:bg-orange-600 shadow-lg transition">Submit Request</button><button id="cancel-withdraw-modal-btn" class="mt-3 text-gray-500 font-semibold">Cancel</button></div></div>
+    <div id="deposit-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-40 p-4">
+        <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm text-center"><h3 class="font-bold text-xl mb-3">Deposit Instructions</h3><p class="text-gray-600 mb-4">Send your investment via M-Pesa to:</p><p class="font-bold text-2xl text-orange-500 bg-gray-100 py-2 rounded-lg mb-6">0721 727 235</p><p class="text-sm text-gray-500 mb-4">After sending, click below to notify the admin of your transaction.</p><button id="complete-transaction-btn" class="w-full bg-green-500 text-white font-bold py-3 rounded-lg hover:bg-green-600 shadow-lg transition">I Have Paid, Notify Admin</button><button id="close-modal-btn" class="mt-3 text-gray-500 font-semibold">Close</button></div>
+    </div>
+    <div id="withdraw-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-40 p-4">
+         <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm text-center"><h3 class="font-bold text-xl mb-3">Request Withdrawal</h3><p class="text-gray-600 mb-4">Enter the amount you wish to withdraw.</p><input type="number" id="withdraw-amount" placeholder="Ksh 0.00" class="w-full text-center px-3 py-2 text-lg font-bold bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"><button id="submit-withdrawal-btn" class="mt-4 w-full bg-orange-500 text-white font-bold py-3 rounded-lg hover:bg-orange-600 shadow-lg transition">Submit Request</button><button id="cancel-withdraw-modal-btn" class="mt-3 text-gray-500 font-semibold">Cancel</button></div>
+    </div>
     <div id="message-modal" class="hidden fixed top-5 right-5 bg-green-500 text-white py-2 px-4 rounded-lg shadow-xl z-50 animate-pulse"><p id="message-modal-text"></p></div>
 
     <script type="module">
-        // --- This entire script block has been rewritten for stability ---
-
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot, updateDoc, increment, collection, addDoc, query, where, getDocs, serverTimestamp, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // This ensures the script runs only after the entire page is loaded
-        document.addEventListener("DOMContentLoaded", () => {
-            
-            // --- CONFIGURATION ---
-            const firebaseConfig = { apiKey: "AIzaSyAwf6foE2lZcv90wnQIRXguq-Z7jkIX8r8", authDomain: "bmf-6447b.firebaseapp.com", projectId: "bmf-6447b", storageBucket: "bmf-6447b.appspot.com", messagingSenderId: "249416500752", appId: "1:249416500752:web:88d421c17752fd08e7ac95", measurementId: "G-2SS309VMLB" };
-            const INVESTMENT_LEVELS = { 'freelance-1': { name: 'Freelance 1', investment: 4000, tasks: 8, amountPerTask: 16.25 }, 'freelance-2': { name: 'Freelance 2', investment: 10000, tasks: 8, amountPerTask: 37.5 }, 'freelance-3': { name: 'Freelance 3', investment: 25000, tasks: 6, amountPerTask: 133.3 }, 'freelance-4': { name: 'Freelance 4', investment: 50000, tasks: 6, amountPerTask: 266.67 }, 'manager-1': { name: 'Teamleader', investment: 100000, tasks: 4, amountPerTask: 825 }, 'manager-2': { name: 'Supervisor', investment: 200000, tasks: 3, amountPerTask: 2200 }, 'manager-3': { name: 'Manager', investment: 500000, tasks: 2, amountPerTask: 8300 }, 'None': { name: 'No Level', investment: 0, tasks: 0, amountPerTask: 0 } };
-            
-            // --- FIREBASE INITIALIZATION ---
-            let app, auth, db;
-            try {
-                app = initializeApp(firebaseConfig);
-                auth = getAuth(app);
-                db = getFirestore(app);
-            } catch (error) {
-                console.error("Firebase initialization failed:", error);
-                alert("Could not connect to the app server. Please try again later.");
-                return;
-            }
+        const firebaseConfig = {
+          apiKey: "AIzaSyAwf6foE2lZcv90wnQIRXguq-Z7jkIX8r8",
+          authDomain: "bmf-6447b.firebaseapp.com",
+          projectId: "bmf-6447b",
+          storageBucket: "bmf-6447b.appspot.com",
+          messagingSenderId: "249416500752",
+          appId: "1:249416500752:web:88d421c17752fd08e7ac95",
+          measurementId: "G-2SS309VMLB"
+        };
+        
+        const INVESTMENT_LEVELS = {
+            'freelance-1': { name: 'Freelance 1', investment: 4000, tasks: 8, amountPerTask: 16.25 },
+            'freelance-2': { name: 'Freelance 2', investment: 10000, tasks: 8, amountPerTask: 37.5 },
+            'freelance-3': { name: 'Freelance 3', investment: 25000, tasks: 6, amountPerTask: 133.3 },
+            'freelance-4': { name: 'Freelance 4', investment: 50000, tasks: 6, amountPerTask: 266.67 },
+            'manager-1': { name: 'Teamleader', investment: 100000, tasks: 4, amountPerTask: 825 },
+            'manager-2': { name: 'Supervisor', investment: 200000, tasks: 3, amountPerTask: 2200 },
+            'manager-3': { name: 'Manager', investment: 500000, tasks: 2, amountPerTask: 8300 },
+            'None': { name: 'No Level', investment: 0, tasks: 0, amountPerTask: 0 }
+        };
 
-            // --- STATE VARIABLES ---
-            let currentUserData = null;
-            let unsubscribeUser = null;
-            let taskTimerInterval = null;
-            let taskTimerEndTime = null;
+        let app, auth, db, currentUserData = null, unsubscribeUser = null, taskTimerInterval = null, taskTimerEndTime = null;
 
-            // --- DOM ELEMENT REFERENCES ---
-            const DOMElements = {
-                authContainer: document.getElementById('auth-container'), appContainer: document.getElementById('app-container'), errorMessage: document.getElementById('error-message'),
-                loginTabBtn: document.getElementById('login-tab-btn'), signupTabBtn: document.getElementById('signup-tab-btn'), loginForm: document.getElementById('login-form'), signupForm: document.getElementById('signup-form'),
-                logoutBtn: document.getElementById('logout-btn'), navItems: document.querySelectorAll('.nav-item'),
-                pages: { home: document.getElementById('page-home'), work: document.getElementById('page-work'), profit: document.getElementById('page-profit'), my: document.getElementById('page-my') },
-                userNameDisplay: document.getElementById('user-name-display'), totalAssetsDisplay: document.getElementById('total-assets-display'), myUsername: document.getElementById('my-username'),
-                myEmail: document.getElementById('my-email'), myUserid: document.getElementById('my-userid'), referralLinkInput: document.getElementById('referral-link-input'),
-                copyReferralBtn: document.getElementById('copy-referral-btn'), workContent: document.getElementById('work-content'), taskFeedback: document.getElementById('task-feedback'),
-                contractCountdownDisplay: document.getElementById('contract-countdown-display'), transactionLog: document.getElementById('transaction-log'), myTeamList: document.getElementById('my-team-list'),
-                profitTasks: document.getElementById('profit-tasks'), profitReferrals: document.getElementById('profit-referrals'),
-                depositBtn: document.getElementById('deposit-btn'), depositModal: document.getElementById('deposit-modal'), closeModalBtn: document.getElementById('close-modal-btn'),
-                completeTransactionBtn: document.getElementById('complete-transaction-btn'), withdrawBtn: document.getElementById('withdraw-btn'), withdrawModal: document.getElementById('withdraw-modal'),
-                cancelWithdrawModalBtn: document.getElementById('cancel-withdraw-modal-btn'), submitWithdrawalBtn: document.getElementById('submit-withdrawal-btn'),
-                withdrawAmountInput: document.getElementById('withdraw-amount'), messageModal: document.getElementById('message-modal'), messageModalText: document.getElementById('message-modal-text'),
-            };
+        try {
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+        } catch (error) { console.error("Firebase init failed:", error); }
+       
+        const DOMElements = {
+            authContainer: document.getElementById('auth-container'), appContainer: document.getElementById('app-container'), errorMessage: document.getElementById('error-message'),
+            loginTabBtn: document.getElementById('login-tab-btn'), signupTabBtn: document.getElementById('signup-tab-btn'), loginForm: document.getElementById('login-form'), signupForm: document.getElementById('signup-form'),
+            logoutBtn: document.getElementById('logout-btn'), navItems: document.querySelectorAll('.nav-item'), pages: { home: document.getElementById('page-home'), work: document.getElementById('page-work'), profit: document.getElementById('page-profit'), my: document.getElementById('page-my') },
+            userNameDisplay: document.getElementById('user-name-display'), totalAssetsDisplay: document.getElementById('total-assets-display'), myUsername: document.getElementById('my-username'), myEmail: document.getElementById('my-email'), myUserid: document.getElementById('my-userid'),
+            referralLinkInput: document.getElementById('referral-link-input'), copyReferralBtn: document.getElementById('copy-referral-btn'), workContent: document.getElementById('work-content'), taskFeedback: document.getElementById('task-feedback'), contractCountdownDisplay: document.getElementById('contract-countdown-display'),
+            transactionLog: document.getElementById('transaction-log'), myTeamList: document.getElementById('my-team-list'), profitTasks: document.getElementById('profit-tasks'), profitReferrals: document.getElementById('profit-referrals'),
+            depositBtn: document.getElementById('deposit-btn'), depositModal: document.getElementById('deposit-modal'), closeModalBtn: document.getElementById('close-modal-btn'), completeTransactionBtn: document.getElementById('complete-transaction-btn'),
+            withdrawBtn: document.getElementById('withdraw-btn'), withdrawModal: document.getElementById('withdraw-modal'), cancelWithdrawModalBtn: document.getElementById('cancel-withdraw-modal-btn'), submitWithdrawalBtn: document.getElementById('submit-withdrawal-btn'), withdrawAmountInput: document.getElementById('withdraw-amount'),
+            messageModal: document.getElementById('message-modal'), messageModalText: document.getElementById('message-modal-text')
+        };
 
-            // --- HELPER FUNCTIONS ---
-            const showMessage = (text, isError = false) => {
-                DOMElements.messageModalText.textContent = text;
-                DOMElements.messageModal.classList.toggle('bg-red-500', isError);
-                DOMElements.messageModal.classList.toggle('bg-green-500', !isError);
-                DOMElements.messageModal.classList.remove('hidden');
-                setTimeout(() => DOMElements.messageModal.classList.add('hidden'), 3500);
-            };
+        const showLoading = (isLoading) => {}; // Spinner disabled
 
-            const switchAuthTab = (tab) => {
-                DOMElements.errorMessage.textContent = '';
-                const isLogin = tab === 'login';
-                DOMElements.loginTabBtn.classList.toggle('border-orange-500', isLogin);
-                DOMElements.loginTabBtn.classList.toggle('text-orange-500', isLogin);
-                DOMElements.loginTabBtn.classList.toggle('text-gray-500', !isLogin);
-                DOMElements.signupTabBtn.classList.toggle('border-orange-500', !isLogin);
-                DOMElements.signupTabBtn.classList.toggle('text-orange-500', !isLogin);
-                DOMElements.signupTabBtn.classList.toggle('text-gray-500', isLogin);
-                DOMElements.loginForm.classList.toggle('hidden', !isLogin);
-                DOMElements.signupForm.classList.toggle('hidden', isLogin);
-            };
+        const showMessage = (text, isError = false) => {
+            DOMElements.messageModalText.textContent = text;
+            DOMElements.messageModal.classList.toggle('bg-red-500', isError);
+            DOMElements.messageModal.classList.toggle('bg-green-500', !isError);
+            DOMElements.messageModal.classList.remove('hidden');
+            setTimeout(() => DOMElements.messageModal.classList.add('hidden'), 3000);
+        };
 
-            const switchPage = (pageName) => {
-                Object.values(DOMElements.pages).forEach(p => p.classList.add('hidden'));
-                if(DOMElements.pages[pageName]) DOMElements.pages[pageName].classList.remove('hidden');
-                DOMElements.navItems.forEach(item => item.classList.toggle('active', item.dataset.page === pageName));
-                if (pageName === 'profit') renderProfitPage();
-                if (pageName === 'my') renderMyTeam();
-            };
+        const switchAuthTab = (tab) => {
+            DOMElements.errorMessage.textContent = '';
+            const isLogin = tab === 'login';
+            DOMElements.loginTabBtn.classList.toggle('border-orange-500', isLogin); DOMElements.loginTabBtn.classList.toggle('text-orange-500', isLogin); DOMElements.loginTabBtn.classList.toggle('text-gray-500', !isLogin);
+            DOMElements.signupTabBtn.classList.toggle('border-orange-500', !isLogin); DOMElements.signupTabBtn.classList.toggle('text-orange-500', !isLogin); DOMElements.signupTabBtn.classList.toggle('text-gray-500', isLogin);
+            DOMElements.loginForm.classList.toggle('hidden', !isLogin); DOMElements.signupForm.classList.toggle('hidden', isLogin);
+        };
+        const switchPage = (pageName) => {
+            Object.values(DOMElements.pages).forEach(p => p.classList.add('hidden'));
+            if(DOMElements.pages[pageName]) DOMElements.pages[pageName].classList.remove('hidden');
+            DOMElements.navItems.forEach(item => item.classList.toggle('active', item.dataset.page === pageName));
+            if (pageName === 'profit') renderProfitPage();
+            if (pageName === 'my') renderMyTeam();
+        };
 
-            // --- CORE LOGIC ---
-            const createUserProfile = async (user, username) => {
-                const userRef = doc(db, "users", user.uid);
-                const urlParams = new URLSearchParams(window.location.search);
-                await setDoc(userRef, { uid: user.uid, username, email: user.email, createdAt: serverTimestamp(), investmentLevel: 'None', totalAssets: 0, contractEndDate: null, referrerId: urlParams.get('ref') || null, lastResetDate: new Date().toISOString().split('T')[0], tasksCompletedToday: 0, activationDay: null, lastWithdrawalDate: null });
-            };
-
-            const listenToUserData = (user) => {
+        onAuthStateChanged(auth, user => {
+            if (user) {
+                DOMElements.authContainer.classList.add('hidden');
+                DOMElements.appContainer.style.display = 'flex';
+                listenToUserData(user);
+                switchPage('home');
+            } else {
+                DOMElements.authContainer.classList.remove('hidden');
+                DOMElements.appContainer.style.display = 'none';
                 if (unsubscribeUser) unsubscribeUser();
-                const userRef = doc(db, "users", user.uid);
-                unsubscribeUser = onSnapshot(userRef, async (docSnap) => {
-                    if (docSnap.exists()) {
-                        currentUserData = { id: docSnap.id, ...docSnap.data() };
-                        await checkAndResetTasks(user.uid, currentUserData);
-                        updateUI(currentUserData);
-                    }
-                }, error => console.error("Error listening to user data:", error));
-            };
-
-            const checkAndResetTasks = async (userId, userData) => {
-                const today = new Date().toISOString().split('T')[0];
-                if (today !== userData.lastResetDate) {
-                    await updateDoc(doc(db, "users", userId), { tasksCompletedToday: 0, lastResetDate: today });
-                }
-            };
-            
-            const updateUI = (data) => {
-                if (!data) return;
-                DOMElements.userNameDisplay.textContent = data.username;
-                DOMElements.totalAssetsDisplay.textContent = `Ksh ${data.totalAssets.toFixed(2)}`;
-                DOMElements.myUsername.textContent = data.username;
-                DOMElements.myEmail.textContent = data.email;
-                DOMElements.myUserid.textContent = data.uid;
-                DOMElements.referralLinkInput.value = `${window.location.origin}${window.location.pathname}?ref=${data.uid}`;
-                renderWorkPage(data);
-                if (data.contractEndDate?.toDate) {
-                    const diffDays = Math.ceil((data.contractEndDate.toDate() - new Date()) / (1000 * 60 * 60 * 24));
-                    DOMElements.contractCountdownDisplay.textContent = `${diffDays > 0 ? diffDays : 0} Days Remaining`;
-                } else {
-                    DOMElements.contractCountdownDisplay.textContent = 'No Active Contract';
-                }
-            };
-
-            // All other functions are unchanged
-            const renderWorkPage = (data) => { /* All unchanged */ };
-            const handleWorkButtonClick = () => { /* All unchanged */ };
-            const startTaskTimer = () => { /* All unchanged */ };
-            const completeTask = async () => { /* All unchanged */ };
-            const renderProfitPage = async () => { /* All unchanged */ };
-            const renderMyTeam = async () => { /* All unchanged */ };
-
-            // --- EVENT LISTENERS ---
-            DOMElements.loginTabBtn.addEventListener('click', () => switchAuthTab('login'));
-            DOMElements.signupTabBtn.addEventListener('click', () => switchAuthTab('signup'));
-
-            DOMElements.loginForm.addEventListener('submit', async (e) => { e.preventDefault(); DOMElements.errorMessage.textContent = ''; try { await signInWithEmailAndPassword(auth, DOMElements.loginForm['login-email'].value, DOMElements.loginForm['login-password'].value); } catch (error) { DOMElements.errorMessage.textContent = error.message.replace('Firebase: ', ''); } });
-            DOMElements.signupForm.addEventListener('submit', async (e) => { e.preventDefault(); DOMElements.errorMessage.textContent = ''; const password = DOMElements.signupForm['signup-password'].value; if (password !== DOMElements.signupForm['signup-confirm-password'].value) { DOMElements.errorMessage.textContent = "Passwords do not match."; return; } try { const userCredential = await createUserWithEmailAndPassword(auth, DOMElements.signupForm['signup-email'].value, password); await createUserProfile(userCredential.user, DOMElements.signupForm['signup-username'].value); } catch (error) { DOMElements.errorMessage.textContent = error.message.replace('Firebase: ', ''); } });
-            DOMElements.logoutBtn.addEventListener('click', () => { if (confirm("Are you sure you want to logout?")) signOut(auth); });
-            
-            DOMElements.copyReferralBtn.addEventListener('click', () => { DOMElements.referralLinkInput.select(); document.execCommand('copy'); showMessage('Referral link copied!'); });
-            DOMElements.depositBtn.addEventListener('click', () => DOMElements.depositModal.classList.remove('hidden'));
-            DOMElements.closeModalBtn.addEventListener('click', () => DOMElements.depositModal.classList.add('hidden'));
-            DOMElements.completeTransactionBtn.addEventListener('click', async () => { try { await addDoc(collection(db, 'admin_notifications'), { userId: auth.currentUser.uid, username: currentUserData.username, type: 'deposit_paid', timestamp: serverTimestamp() }); showMessage('Admin has been notified.'); DOMElements.depositModal.classList.add('hidden'); } catch (e) { showMessage('Could not notify admin.', true); } });
-
-            // Weekly withdrawal logic
-            DOMElements.withdrawBtn.addEventListener('click', () => {
-                if (!currentUserData) return;
-                if (!currentUserData.activationDay) { showMessage("Your account is not activated for withdrawals.", true); return; }
-                const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-                const today = days[new Date().getDay()];
-                if (today !== currentUserData.activationDay) { showMessage(`Withdrawals are only allowed on your designated day: ${currentUserData.activationDay}.`, true); return; }
-                if (currentUserData.lastWithdrawalDate) {
-                    const diffTime = Math.abs(new Date() - currentUserData.lastWithdrawalDate.toDate());
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                    if (diffDays < 7) { showMessage(`You can only withdraw once per week. Please try again in ${7 - diffDays} day(s).`, true); return; }
-                }
-                DOMElements.withdrawModal.classList.remove('hidden');
-            });
-            DOMElements.cancelWithdrawModalBtn.addEventListener('click', () => DOMElements.withdrawModal.classList.add('hidden'));
-            DOMElements.submitWithdrawalBtn.addEventListener('click', async () => { const amount = parseFloat(DOMElements.withdrawAmountInput.value); if (isNaN(amount) || amount <= 0) { showMessage('Please enter a valid amount.', true); return; } if (amount > currentUserData.totalAssets) { showMessage('Withdrawal amount cannot exceed your total assets.', true); return; } try { await addDoc(collection(db, 'admin_notifications'), { userId: auth.currentUser.uid, username: currentUserData.username, type: 'withdrawal_request', amount: amount, timestamp: serverTimestamp() }); await updateDoc(doc(db, "users", auth.currentUser.uid), { lastWithdrawalDate: serverTimestamp() }); showMessage('Withdrawal request sent.'); DOMElements.withdrawModal.classList.add('hidden'); DOMElements.withdrawAmountInput.value = ''; } catch (e) { showMessage('Could not send request.', true); } });
-
-            DOMElements.navItems.forEach(item => item.addEventListener('click', () => switchPage(item.dataset.page)));
-
-            // --- INITIALIZATION ---
-            onAuthStateChanged(auth, user => {
-                if (user) {
-                    DOMElements.authContainer.style.display = 'none';
-                    DOMElements.appContainer.style.display = 'flex';
-                    listenToUserData(user);
-                    switchPage('home');
-                } else {
-                    DOMElements.authContainer.style.display = 'flex';
-                    DOMElements.appContainer.style.display = 'none';
-                    if (unsubscribeUser) unsubscribeUser();
-                    currentUserData = null;
-                }
-            });
-
-            switchAuthTab('login'); // Set the initial view to the login tab
+                currentUserData = null;
+            }
+            showLoading(false);
         });
+        
+        DOMElements.loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault(); showLoading(true); DOMElements.errorMessage.textContent = '';
+            try { await signInWithEmailAndPassword(auth, DOMElements.loginForm['login-email'].value, DOMElements.loginForm['login-password'].value); } 
+            catch (error) { DOMElements.errorMessage.textContent = error.message.replace('Firebase: ', ''); showLoading(false); }
+        });
+
+        DOMElements.signupForm.addEventListener('submit', async (e) => {
+            e.preventDefault(); showLoading(true); DOMElements.errorMessage.textContent = '';
+            const password = DOMElements.signupForm['signup-password'].value;
+            if (password !== DOMElements.signupForm['signup-confirm-password'].value) { DOMElements.errorMessage.textContent = "Passwords do not match."; showLoading(false); return; }
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, DOMElements.signupForm['signup-email'].value, password);
+                await createUserProfile(userCredential.user, DOMElements.signupForm['signup-username'].value);
+            } catch (error) { DOMElements.errorMessage.textContent = error.message.replace('Firebase: ', ''); showLoading(false); }
+        });
+
+        DOMElements.logoutBtn.addEventListener('click', () => { if (confirm("Are you sure you want to logout?")) signOut(auth); });
+        
+        const createUserProfile = async (user, username) => {
+            const userRef = doc(db, "users", user.uid);
+            const urlParams = new URLSearchParams(window.location.search);
+            await setDoc(userRef, {
+                uid: user.uid, username, email: user.email, createdAt: serverTimestamp(),
+                investmentLevel: 'None', totalAssets: 0, contractEndDate: null,
+                referrerId: urlParams.get('ref') || null, lastResetDate: new Date().toISOString().split('T')[0], tasksCompletedToday: 0
+            });
+        };
+        
+        const listenToUserData = (user) => {
+            const userRef = doc(db, "users", user.uid);
+            if (unsubscribeUser) unsubscribeUser();
+            unsubscribeUser = onSnapshot(userRef, async (docSnap) => {
+                if (docSnap.exists()) {
+                    currentUserData = { id: docSnap.id, ...docSnap.data() };
+                    await checkAndResetTasks(user.uid, currentUserData);
+                    updateUI(currentUserData); // This function will now update all dynamic user info
+                }
+            });
+        };
+
+        const checkAndResetTasks = async (userId, userData) => {
+            const today = new Date().toISOString().split('T')[0];
+            if (today !== userData.lastResetDate) {
+                await updateDoc(doc(db, "users", userId), { tasksCompletedToday: 0, lastResetDate: today });
+            }
+        };
+
+        // --- CHANGE STARTS HERE: Consolidated UI Update Function ---
+        const updateUI = (data) => {
+            if (!data) return;
+            // Update welcome message
+            DOMElements.userNameDisplay.textContent = data.username;
+
+            // Update total assets
+            DOMElements.totalAssetsDisplay.textContent = `Ksh ${data.totalAssets.toFixed(2)}`;
+            
+            // Update "My Profile" section
+            DOMElements.myUsername.textContent = data.username;
+            DOMElements.myEmail.textContent = data.email;
+            DOMElements.myUserid.textContent = data.uid;
+            
+            // Update referral link
+            DOMElements.referralLinkInput.value = `${window.location.origin}${window.location.pathname}?ref=${data.uid}`;
+            
+            renderWorkPage(data);
+
+            if (data.contractEndDate?.toDate) {
+                const diffDays = Math.ceil((data.contractEndDate.toDate() - new Date()) / (1000 * 60 * 60 * 24));
+                DOMElements.contractCountdownDisplay.textContent = `${diffDays > 0 ? diffDays : 0} Days Remaining`;
+            } else { DOMElements.contractCountdownDisplay.textContent = 'No Active Contract'; }
+        };
+        // --- CHANGE ENDS HERE ---
+        
+        const renderWorkPage = (data) => {
+            const levelKey = data.investmentLevel || 'None';
+            const levelInfo = INVESTMENT_LEVELS[levelKey];
+            if (!levelInfo || levelKey === 'None') { DOMElements.workContent.innerHTML = `<p class="text-gray-600">Your account is not active. Please make a deposit and contact the admin to activate an investment level.</p>`; return; }
+            if (data.tasksCompletedToday >= levelInfo.tasks) { DOMElements.workContent.innerHTML = `<p class="font-bold text-2xl text-green-500 my-4">All tasks completed for today!</p><p class="text-gray-600">Come back tomorrow.</p>`; return; }
+            
+            const remainingTime = taskTimerEndTime ? Math.round((taskTimerEndTime - Date.now()) / 1000) : 0;
+            let buttonHTML;
+            if (remainingTime > 0) buttonHTML = `<button id="work-button" class="w-full btn-disabled text-white font-bold py-4 px-4 rounded-lg text-xl" disabled>Working... (${remainingTime}s)</button>`;
+            else if (taskTimerEndTime) buttonHTML = `<button id="work-button" class="w-full bg-green-500 text-white font-bold py-4 px-4 rounded-lg hover:bg-green-600 shadow-lg text-xl">Complete Task</button>`;
+            else buttonHTML = `<button id="work-button" class="w-full bg-orange-500 text-white font-bold py-4 px-4 rounded-lg hover:bg-orange-600 shadow-lg text-xl">Start Working</button>`;
+            DOMElements.workContent.innerHTML = `<p class="text-gray-600">Level: <span class="font-bold">${levelInfo.name}</span></p><p class="font-bold text-4xl text-orange-500 my-4">Task ${data.tasksCompletedToday + 1} of ${levelInfo.tasks}</p>${buttonHTML}`;
+            document.getElementById('work-button')?.addEventListener('click', handleWorkButtonClick);
+        };
+
+        const handleWorkButtonClick = () => {
+            const remainingTime = taskTimerEndTime ? Math.round((taskTimerEndTime - Date.now()) / 1000) : 0;
+            if (remainingTime > 0) return; 
+            if (taskTimerEndTime) completeTask();
+            else startTaskTimer();
+        };
+
+        const startTaskTimer = () => {
+            const levelInfo = INVESTMENT_LEVELS[currentUserData.investmentLevel];
+            let taskDuration = 10; // Default 10 seconds
+            if(levelInfo.name === 'Freelance 1') taskDuration = 15;
+            if(levelInfo.name === 'Freelance 2') taskDuration = 15;
+            if(levelInfo.name === 'Freelance 3') taskDuration = 20;
+            if(levelInfo.name === 'Freelance 4') taskDuration = 20;
+            if(levelInfo.name === 'Teamleader') taskDuration = 25;
+            if(levelInfo.name === 'Supervisor') taskDuration = 30;
+            if(levelInfo.name === 'Manager') taskDuration = 35;
+            
+            taskTimerEndTime = Date.now() + taskDuration * 1000;
+            renderWorkPage(currentUserData);
+            
+            if (taskTimerInterval) clearInterval(taskTimerInterval);
+            taskTimerInterval = setInterval(() => {
+                const secondsLeft = Math.round((taskTimerEndTime - Date.now()) / 1000);
+                if (secondsLeft <= 0) {
+                    clearInterval(taskTimerInterval);
+                    taskTimerInterval = null;
+                    renderWorkPage(currentUserData);
+                } else {
+                    const workButton = document.getElementById('work-button');
+                    if(workButton) workButton.textContent = `Working... (${secondsLeft}s)`;
+                }
+            }, 1000);
+        };
+        
+        const completeTask = async () => {
+            showLoading(true); taskTimerEndTime = null;
+            const levelInfo = INVESTMENT_LEVELS[currentUserData.investmentLevel];
+            const earnings = levelInfo.amountPerTask;
+            const userRef = doc(db, "users", auth.currentUser.uid);
+            try {
+                await updateDoc(userRef, { totalAssets: increment(earnings), tasksCompletedToday: increment(1) });
+                await addDoc(collection(db, "transactions"), { userId: auth.currentUser.uid, amount: earnings, type: 'task', timestamp: serverTimestamp() });
+                
+                if (currentUserData.referrerId) {
+                    const bonus = earnings * 0.03;
+                    const referrerRef = doc(db, "users", currentUserData.referrerId);
+                    await updateDoc(referrerRef, { totalAssets: increment(bonus) });
+                    await addDoc(collection(db, "transactions"), { userId: currentUserData.referrerId, amount: bonus, type: 'referral-3%', fromUser: currentUserData.username, timestamp: serverTimestamp() });
+                }
+                DOMElements.taskFeedback.textContent = `Task completed! +Ksh ${earnings.toFixed(2)} added.`;
+                setTimeout(() => { DOMElements.taskFeedback.textContent = '' }, 3000);
+            } catch (error) { console.error("Error completing task: ", error); showMessage("Error completing task.", true); }
+            showLoading(false);
+        };
+
+        const renderProfitPage = async () => {
+            const q = query(collection(db, "transactions"), where("userId", "==", auth.currentUser.uid), orderBy("timestamp", "desc"));
+            const querySnapshot = await getDocs(q);
+            DOMElements.transactionLog.innerHTML = '';
+            let totalTaskProfit = 0, totalReferralProfit = 0;
+            if (querySnapshot.empty) { DOMElements.transactionLog.innerHTML = '<p class="text-gray-500 text-center">No transactions yet.</p>'; } 
+            else {
+                querySnapshot.docs.forEach(docSnap => {
+                    const t = docSnap.data();
+                    const typeText = t.type === 'task' ? `Task Completion` : `Referral Bonus (${t.type}) from ${t.fromUser || 'a referral'}`;
+                    if (t.type === 'task') totalTaskProfit += t.amount; else totalReferralProfit += t.amount;
+                    DOMElements.transactionLog.innerHTML += `<div class="bg-white p-3 rounded-lg shadow-sm flex justify-between items-center"><div><p class="font-semibold">${typeText}</p><p class="text-xs text-gray-500">${t.timestamp.toDate().toLocaleString()}</p></div><p class="font-bold text-green-600">+ Ksh ${t.amount.toFixed(2)}</p></div>`;
+                });
+            }
+            DOMElements.profitTasks.textContent = `Ksh ${totalTaskProfit.toFixed(2)}`;
+            DOMElements.profitReferrals.textContent = `Ksh ${totalReferralProfit.toFixed(2)}`;
+        };
+
+        const renderMyTeam = async () => {
+            const q = query(collection(db, "users"), where("referrerId", "==", auth.currentUser.uid));
+            const querySnapshot = await getDocs(q);
+            DOMElements.myTeamList.innerHTML = '';
+            if (querySnapshot.empty) { DOMElements.myTeamList.innerHTML = '<p class="text-gray-500 text-center">No referrals yet. Share your link!</p>'; }
+            else {
+                querySnapshot.forEach(docSnap => {
+                    const member = docSnap.data();
+                    const status = member.investmentLevel === 'None' ? 'Registered' : 'Active';
+                    DOMElements.myTeamList.innerHTML += `<div class="bg-gray-50 p-2 rounded-md flex justify-between items-center text-sm"><p class="font-semibold">${member.username}</p><p class="font-bold ${status === 'Active' ? 'text-green-500' : 'text-yellow-500'}">${status}</p></div>`;
+                });
+            }
+        };
+
+        DOMElements.copyReferralBtn.addEventListener('click', () => {
+            DOMElements.referralLinkInput.select();
+            document.execCommand('copy');
+            showMessage('Referral link copied!');
+        });
+
+        DOMElements.depositBtn.addEventListener('click', () => DOMElements.depositModal.classList.remove('hidden'));
+        DOMElements.closeModalBtn.addEventListener('click', () => DOMElements.depositModal.classList.add('hidden'));
+        DOMElements.completeTransactionBtn.addEventListener('click', async () => {
+            showLoading(true);
+            try {
+                await addDoc(collection(db, 'admin_notifications'), {
+                    userId: auth.currentUser.uid,
+                    username: currentUserData.username,
+                    type: 'deposit_paid',
+                    message: `${currentUserData.username} has reported making a deposit.`,
+                    timestamp: serverTimestamp(),
+                    status: 'pending'
+                });
+                showMessage('Admin has been notified. Please wait for activation.');
+                DOMElements.depositModal.classList.add('hidden');
+            } catch(e) { 
+                console.error("Error notifying admin: ", e);
+                showMessage('Could not notify admin. Please try again.', true); 
+            }
+            showLoading(false);
+        });
+
+        DOMElements.withdrawBtn.addEventListener('click', () => DOMElements.withdrawModal.classList.remove('hidden'));
+        DOMElements.cancelWithdrawModalBtn.addEventListener('click', () => DOMElements.withdrawModal.classList.add('hidden'));
+        DOMElements.submitWithdrawalBtn.addEventListener('click', async () => {
+            const amount = parseFloat(DOMElements.withdrawAmountInput.value);
+            if(isNaN(amount) || amount <= 0) { showMessage('Please enter a valid amount.', true); return; }
+            if(amount > currentUserData.totalAssets) { showMessage('Withdrawal amount cannot exceed your total assets.', true); return; }
+            showLoading(true);
+             try {
+                await addDoc(collection(db, 'admin_notifications'), {
+                    userId: auth.currentUser.uid,
+                    username: currentUserData.username,
+                    type: 'withdrawal_request',
+                    amount: amount,
+                    message: `${currentUserData.username} has requested to withdraw Ksh ${amount}.`,
+                    timestamp: serverTimestamp(),
+                    status: 'pending'
+                });
+                showMessage('Withdrawal request sent to admin.');
+                DOMElements.withdrawModal.classList.add('hidden');
+                DOMElements.withdrawAmountInput.value = '';
+            } catch(e) { showMessage('Could not send request. Please try again.', true); }
+            showLoading(false);
+        });
+
+        DOMElements.navItems.forEach(item => item.addEventListener('click', () => switchPage(item.dataset.page)));
+        
+        DOMElements.loginTabBtn.addEventListener('click', () => switchAuthTab('login'));
+        DOMElements.signupTabBtn.addEventListener('click', () => switchAuthTab('signup'));
+
+        switchAuthTab('login'); 
+        showLoading(true);
     </script>
 </body>
 </html>
