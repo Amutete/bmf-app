@@ -7,12 +7,15 @@ const admin = require('firebase-admin');
 // This is secure because this code only runs on the server, not in the browser.
 const ADMIN_EMAIL_TO_SET = "cleophasamutete@gmail.com";
 
-// Initialize Firebase Admin SDK
-// We will get the credentials from Netlify's environment variables
+// Initialize Firebase Admin SDK only if it hasn't been initialized yet.
+// We get the credentials from Netlify's environment variables.
 if (!admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert({
       projectId: process.env.FIREBASE_PROJECT_ID,
+      // This is the crucial part: it replaces the literal '\n' characters
+      // from the environment variable with actual newline characters
+      // so the PEM key can be parsed correctly.
       privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
       clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
     }),
