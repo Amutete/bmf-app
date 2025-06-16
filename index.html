@@ -405,60 +405,20 @@
         DOMElements.withdrawBtn.addEventListener('click', () => DOMElements.withdrawModal.classList.remove('hidden'));
         DOMElements.cancelWithdrawModalBtn.addEventListener('click', () => DOMElements.withdrawModal.classList.add('hidden'));
         DOMElements.submitWithdrawalBtn.addEventListener('click', async () => {
-    const amount = parseFloat(DOMElements.withdrawAmountInput.value);
-    if (isNaN(amount) || amount <= 0) {
-        showMessage('Please enter a valid amount.', true);
-        return;
-    }
-
-    if (amount > currentUserData.totalAssets) {
-        showMessage('Withdrawal amount cannot exceed your total assets.', true);
-        return;
-    }
-
-    const today = new Date();
-    const todayDay = today.toLocaleString('en-US', { weekday: 'long' });
-    const lastWithdrawalDate = currentUserData.lastWithdrawalDate ? new Date(currentUserData.lastWithdrawalDate) : null;
-    const activationDay = currentUserData.activationDay;
-
-    if (activationDay && todayDay !== activationDay) {
-        showMessage(`You can only withdraw on your activation day (${activationDay}).`, true);
-        return;
-    }
-
-    if (lastWithdrawalDate) {
-        const diffInDays = (today - lastWithdrawalDate) / (1000 * 60 * 60 * 24);
-        if (diffInDays < 7) {
-            showMessage('You can only withdraw once every 7 days.', true);
-            return;
-        }
-    }
-
-    showLoading(true);
-    try {
-        await addDoc(collection(db, 'admin_notifications'), {
-            userId: auth.currentUser.uid,
-            username: currentUserData.username,
-            type: 'withdrawal_request',
-            amount: amount,
-            message: `${currentUserData.username} has requested to withdraw Ksh ${amount}.`,
-            timestamp: serverTimestamp(),
-            status: 'pending'
-        });
-
-        await updateDoc(doc(db, 'users', auth.currentUser.uid), {
-            lastWithdrawalDate: today.toISOString()
-        });
-
-        showMessage('Withdrawal request sent to admin.');
-        DOMElements.withdrawModal.classList.add('hidden');
-        DOMElements.withdrawAmountInput.value = '';
-    } catch (e) {
-        console.error("Error processing withdrawal: ", e);
-        showMessage('Could not send request. Please try again.', true);
-    }
-    showLoading(false);
-});
+            const amount = parseFloat(DOMElements.withdrawAmountInput.value);
+            if(isNaN(amount) || amount <= 0) { showMessage('Please enter a valid amount.', true); return; }
+            if(amount > currentUserData.totalAssets) { showMessage('Withdrawal amount cannot exceed your total assets.', true); return; }
+            showLoading(true);
+             try {
+                await addDoc(collection(db, 'admin_notifications'), {
+                    userId: auth.currentUser.uid,
+                    username: currentUserData.username,
+                    type: 'withdrawal_request',
+                    amount: amount,
+                    message: `${currentUserData.username} has requested to withdraw Ksh ${amount}.`,
+                    timestamp: serverTimestamp(),
+                    status: 'pending'
+                });
                 showMessage('Withdrawal request sent to admin.');
                 DOMElements.withdrawModal.classList.add('hidden');
                 DOMElements.withdrawAmountInput.value = '';
