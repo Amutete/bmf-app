@@ -118,6 +118,8 @@
 
         // --- App Configuration ---
         const firebaseConfig = { apiKey: "AIzaSyAwf6foE2lZcv90wnQIRXguq-Z7jkIX8r8", authDomain: "bmf-6447b.firebaseapp.com", projectId: "bmf-6447b", storageBucket: "bmf-6447b.appspot.com", messagingSenderId: "249416500752", appId: "1:249416500752:web:88d421c17752fd08e7ac95", measurementId: "G-2SS309VMLB" };
+        
+        // ** NEW CONFIGURATION **
         const INVESTMENT_LEVELS = { 
             'freelance-1': { name: 'Freelance 1', investment: 4000, minWithdraw: 800, dailyProfit: 200 }, 
             'freelance-2': { name: 'Freelance 2', investment: 10000, minWithdraw: 2000, dailyProfit: 500 }, 
@@ -133,7 +135,7 @@
 
         // --- App State & Firebase Initialization ---
         let app, auth, db, currentUserData = null, unsubscribeUser = null, inactivityTimer;
-        let taskTimerInterval = null;
+        let dailyTaskTimerInterval = null;
 
         try {
             app = initializeApp(firebaseConfig);
@@ -188,7 +190,7 @@
         function updateUI(data) {
             if (!data) return;
             DOMElements.userNameDisplay.textContent = data.username;
-            DOMElements.totalAssetsDisplay.textContent = `Ksh ${data.totalAssets.toFixed(2)}`;
+            DOMElements.totalAssetsDisplay.textContent = formatCurrency(data.totalAssets);
             DOMElements.myUsername.textContent = data.username;
             DOMElements.myEmail.textContent = data.email;
             DOMElements.myUserid.textContent = data.uid;
@@ -204,7 +206,7 @@
             Object.values(DOMElements.pages).forEach(p => p.classList.add('hidden'));
             if(DOMElements.pages[pageName]) DOMElements.pages[pageName].classList.remove('hidden');
             DOMElements.navItems.forEach(item => item.classList.toggle('active', item.dataset.page === pageName));
-            if(currentUserData) updateUI(currentUserData); // Re-render parts of UI on page switch
+            if(currentUserData) updateUI(currentUserData);
         }
 
         // --- Authentication Functions ---
@@ -217,6 +219,7 @@
                 referrerId: referrerCode || null,
                 investmentLevel: 'None',
                 totalAssets: 0,
+                // ** NEW FIELDS **
                 totalTaskEarnings: 0,
                 totalReferralEarnings: 0,
                 activationDay: null,
@@ -229,14 +232,12 @@
         // --- Task Logic ---
         function renderWorkPage(data) {
             const levelKey = data.investmentLevel || 'None';
-            const levelInfo = INVESTMENT_LEVELS[levelKey];
             if (levelKey === 'None') { DOMElements.workContent.innerHTML = `<p class="text-gray-600">Your account is not active. Please make a deposit and contact the admin to activate an investment level.</p>`; return; }
             
             const lastTaskTime = data.lastTaskCompleted?.toDate() || new Date(0);
             const now = new Date();
             const timeSinceLastTask = now - lastTaskTime;
-            // Use a 24-hour cooldown for daily tasks
-            const taskCooldown = 24 * 60 * 60 * 1000;
+            const taskCooldown = 24 * 60 * 60 * 1000; // 24-hour cooldown
             
             if (timeSinceLastTask < taskCooldown) {
                 const remainingTime = taskCooldown - timeSinceLastTask;
@@ -249,7 +250,7 @@
             } else {
                  DOMElements.workContent.innerHTML = `<div class="text-center p-6 bg-green-100 text-green-800 rounded-lg shadow">
                     <h3 class="font-bold text-lg">Daily Task Ready!</h3>
-                    <p>Complete your task now to earn ${formatCurrency(levelInfo.dailyProfit)}.</p>
+                    <p>Complete your task now to earn ${formatCurrency(INVESTMENT_LEVELS[levelKey].dailyProfit)}.</p>
                     <button id="complete-task-btn" class="mt-4 bg-green-500 text-white font-bold py-3 px-6 rounded-lg shadow hover:bg-green-600">Start Task (25-30 Min)</button>
                 </div>`;
                 document.getElementById('complete-task-btn').addEventListener('click', handleStartTask);
@@ -261,20 +262,21 @@
             btn.disabled = true;
             const taskDuration = (25 + Math.random() * 5) * 60 * 1000;
             btn.innerHTML = `<div id="task-completion-timer" class="text-lg font-bold"></div>`;
-            startTimer(taskDuration, document.getElementById('task-completion-timer'), async () => {
-                const levelInfo = INVESTMENT_LEVELS[currentUserData.investmentLevel];
-                try {
-                    await updateDoc(doc(db, "users", currentUserData.uid), {
-                        totalAssets: increment(levelInfo.dailyProfit),
-                        totalTaskEarnings: increment(levelInfo.dailyProfit),
-                        lastTaskCompleted: serverTimestamp()
-                    });
-                    showMessage(`Task complete! You earned ${formatCurrency(levelInfo.dailyProfit)}.`);
-                    // UI will auto-update via listener
-                } catch (err) {
-                    showMessage("Error completing task: " + err.message, true);
-                }
-            });
+            startTimer(taskDuration, document.getElementById('task-completion-timer'), completeDailyTask);
+        }
+
+        async function completeDailyTask() {
+            const levelInfo = INVESTMENT_LEVELS[currentUserData.investmentLevel];
+            try {
+                await updateDoc(doc(db, "users", currentUserData.uid), {
+                    totalAssets: increment(levelInfo.dailyProfit),
+                    totalTaskEarnings: increment(levelInfo.dailyProfit),
+                    lastTaskCompleted: serverTimestamp()
+                });
+                showMessage(`Task complete! You earned ${formatCurrency(levelInfo.dailyProfit)}.`);
+            } catch (err) {
+                showMessage("Error completing task: " + err.message, true);
+            }
         }
         
         // --- Withdrawal Logic ---
@@ -290,13 +292,13 @@
 
             const levelInfo = INVESTMENT_LEVELS[level];
             const today = new Date();
-            const withdrawalDay = currentUserData.activationDay; // 0=Sun, 1=Mon...
+            const withdrawalDay = currentUserData.activationDay;
             const lastWithdrawal = currentUserData.lastWithdrawalDate?.toDate();
             const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
             let errorMsg = '';
 
             if (withdrawalDay === null || withdrawalDay === undefined) {
-                errorMsg = `Your withdrawal day is not set. Please contact support.`;
+                errorMsg = `Your withdrawal day is not set. This happens on activation. Please contact support.`;
             } else if (today.getDay() !== withdrawalDay) {
                 errorMsg = `Withdrawals are only available on ${days[withdrawalDay]}s.`;
             } else if (lastWithdrawal && today.toDateString() === lastWithdrawal.toDateString()) {
@@ -324,9 +326,18 @@
             e.target.textContent = '...';
 
             try {
-                const userRef = doc(db, 'users', currentUserData.uid);
-                await updateDoc(userRef, { totalAssets: increment(-amount), lastWithdrawalDate: serverTimestamp() });
-                await addDoc(collection(db, 'admin_notifications'), { userId: currentUserData.uid, username: currentUserData.username, amount: amount, type: 'withdrawal_request', timestamp: serverTimestamp() });
+                // Deduct from balance immediately and set withdrawal date
+                await updateDoc(doc(db, 'users', currentUserData.uid), {
+                    totalAssets: increment(-amount),
+                    lastWithdrawalDate: serverTimestamp()
+                });
+                
+                // Create notification for admin
+                await addDoc(collection(db, 'admin_notifications'), {
+                    userId: currentUserData.uid, username: currentUserData.username,
+                    amount: amount, type: 'withdrawal_request', timestamp: serverTimestamp()
+                });
+
                 showMessage(`Withdrawal request for ${formatCurrency(amount)} sent successfully!`);
                 DOMElements.withdrawModal.classList.add('hidden');
             } catch (err) {
@@ -344,9 +355,9 @@
             const querySnapshot = await getDocs(q);
             DOMElements.transactionLog.innerHTML = querySnapshot.empty ? '<p class="text-gray-500 text-center">No transactions yet.</p>' : querySnapshot.docs.map(docSnap => {
                 const t = docSnap.data();
-                const isCredit = !t.type?.includes('withdrawal'); // Simple check
+                const isCredit = !t.type?.includes('withdrawal');
                 const typeText = t.type ? t.type.replace('-', ' ') : 'Transaction';
-                return `<div class="bg-white p-3 rounded-lg shadow-sm flex justify-between items-center"><div><p class="font-semibold capitalize">${typeText}</p><p class="text-xs text-gray-500">${t.timestamp.toDate().toLocaleString()}</p></div><p class="font-bold ${isCredit ? 'text-green-600' : 'text-red-600'}">${isCredit ? '+' : '-'} ${formatCurrency(t.amount)}</p></div>`;
+                return `<div class="bg-white p-3 rounded-lg shadow-sm flex justify-between items-center"><div><p class="font-semibold capitalize">${typeText}</p><p class="text-xs text-gray-500">${t.timestamp.toDate().toLocaleString()}</p></div><p class="font-bold ${isCredit ? 'text-green-600' : 'text-red-600'}">${isCredit ? '+' : '-'}${formatCurrency(t.amount)}</p></div>`;
             }).join('');
         }
 
@@ -379,7 +390,7 @@
         function resetInactivityTimer() { clearTimeout(inactivityTimer); inactivityTimer = setTimeout(() => { showMessage("Logged out due to inactivity.", true); signOut(auth); }, INACTIVITY_TIMEOUT); }
         function setupInactivityDetection() { window.addEventListener('mousemove', resetInactivityTimer); window.addEventListener('keypress', resetInactivityTimer); resetInactivityTimer(); }
         function clearInactivityDetection() { clearTimeout(inactivityTimer); window.removeEventListener('mousemove', resetInactivityTimer); window.removeEventListener('keypress', resetInactivityTimer); }
-        function startTimer(duration, display, onEnd) { let timer = duration, hours, minutes, seconds; const interval = setInterval(() => { hours = parseInt(timer / (3600 * 1000), 10); minutes = parseInt((timer % (3600 * 1000)) / (60 * 1000), 10); seconds = parseInt((timer / 1000) % 60, 10); hours = hours < 10 ? "0" + hours : hours; minutes = minutes < 10 ? "0" + minutes : minutes; seconds = seconds < 10 ? "0" + seconds : seconds; if(display) display.textContent = `${hours}:${minutes}:${seconds}`; if ((timer -= 1000) < 0) { clearInterval(interval); if(onEnd) onEnd(); } }, 1000); }
+        function startTimer(duration, display, onEnd) { if(dailyTaskTimerInterval) clearInterval(dailyTaskTimerInterval); let timer = duration; dailyTaskTimerInterval = setInterval(() => { let hours = parseInt(timer / (3600 * 1000), 10); let minutes = parseInt((timer % (3600 * 1000)) / (60 * 1000), 10); let seconds = parseInt((timer / 1000) % 60, 10); hours = hours < 10 ? "0" + hours : hours; minutes = minutes < 10 ? "0" + minutes : minutes; seconds = seconds < 10 ? "0" + seconds : seconds; if(display) display.textContent = `${hours}:${minutes}:${seconds}`; if ((timer -= 1000) < 0) { clearInterval(dailyTaskTimerInterval); if(onEnd) onEnd(); } }, 1000); }
         
         // Initial setup
         Object.keys(INVESTMENT_LEVELS).filter(k => k !== 'None').forEach(key => {
