@@ -3,383 +3,196 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BMF - Admin Panel</title>
+    <title>BMF - Admin Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/heroicons/2.1.3/24/outline/hero-icons.min.css" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
-        /* Use a custom orange color for active items to match BMF branding */
-        .admin-nav-item.active { background-color: #f97316; color: white; }
+        .sidebar-link { display: flex; align-items: center; padding: 0.75rem 1rem; border-radius: 0.5rem; transition: background-color 0.2s; cursor: pointer; }
+        .sidebar-link:hover, .sidebar-link.active { background-color: #4a5568; }
+        .sidebar-link svg { width: 1.5rem; height: 1.5rem; margin-right: 0.75rem; }
+        .content-section { display: none; }
+        .content-section.active { display: block; }
+        .stat-card { background-color: white; border-radius: 0.75rem; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); }
+        .notification-badge { position: absolute; top: 0.5rem; right: 0.5rem; background-color: #f97316; color: white; border-radius: 9999px; font-size: 0.75rem; font-weight: bold; width: 1.5rem; height: 1.5rem; display: flex; align-items: center; justify-content: center; }
     </style>
 </head>
-<body class="bg-slate-100">
+<body class="bg-gray-100">
 
-    <!-- Admin Login Screen -->
-    <div id="admin-auth-container" class="min-h-screen bg-gray-800 flex items-center justify-center p-4">
-        <div class="w-full max-w-sm bg-white rounded-lg shadow-md p-6">
-            <h2 class="text-2xl font-bold text-center text-slate-800 mb-6">BMF Admin Login</h2>
+    <div id="admin-login-container" class="min-h-screen flex items-center justify-center bg-gray-200 p-4">
+        <div class="w-full max-w-sm bg-white rounded-2xl shadow-xl p-8">
+            <h1 class="text-3xl font-bold text-center text-orange-500 mb-6">BMF Admin Login</h1>
             <div id="admin-error-message" class="mb-4 text-center text-red-500 font-medium h-5"></div>
             <form id="admin-login-form">
                 <div class="mb-4">
-                    <label for="admin-login-email" class="block text-sm font-medium text-gray-700">Email</label>
-                    <input type="email" id="admin-login-email" required class="mt-1 block w-full px-3 py-2 bg-slate-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500">
+                    <label for="admin-email" class="block text-sm font-medium text-gray-700">Admin Email</label>
+                    <input type="email" id="admin-email" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500">
                 </div>
                 <div class="mb-6">
-                    <label for="admin-login-password" class="block text-sm font-medium text-gray-700">Password</label>
-                    <input type="password" id="admin-login-password" required class="mt-1 block w-full px-3 py-2 bg-slate-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500">
+                    <label for="admin-password" class="block text-sm font-medium text-gray-700">Admin Password</label>
+                    <input type="password" id="admin-password" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500">
                 </div>
                 <button type="submit" class="w-full bg-orange-500 text-white font-bold py-3 px-4 rounded-lg hover:bg-orange-600 transition duration-300 shadow-lg">Login</button>
             </form>
         </div>
     </div>
 
-    <!-- Main Admin App -->
-    <div id="admin-app-container" class="hidden">
-        <header class="bg-slate-800 text-white p-4 flex justify-between items-center shadow-md">
-            <h1 class="text-xl font-bold">BMF ADMIN</h1>
-            <button id="admin-logout-btn" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg text-sm">Logout</button>
-        </header>
-
-        <div class="flex">
-            <!-- Sidebar Navigation -->
-            <nav class="w-48 bg-slate-700 min-h-screen p-4">
-                <ul>
-                    <li><button data-page="dashboard" class="admin-nav-item w-full text-left font-semibold py-2 px-3 rounded-lg mb-2 text-slate-200 hover:bg-slate-600 active">Dashboard</button></li>
-                    <li><button data-page="users" class="admin-nav-item w-full text-left font-semibold py-2 px-3 rounded-lg mb-2 text-slate-200 hover:bg-slate-600">Users</button></li>
-                    <li><button data-page="deposits" class="admin-nav-item w-full text-left font-semibold py-2 px-3 rounded-lg mb-2 text-slate-200 hover:bg-slate-600">Deposit Requests</button></li>
-                    <li><button data-page="withdrawals" class="admin-nav-item w-full text-left font-semibold py-2 px-3 rounded-lg mb-2 text-slate-200 hover:bg-slate-600">Withdrawal Requests</button></li>
-                </ul>
+    <div id="admin-panel-container" class="hidden">
+        <div class="flex h-screen bg-gray-800 text-white">
+            <nav class="w-64 flex-shrink-0 bg-slate-900 p-4 flex flex-col justify-between">
+                <div>
+                    <h2 class="text-2xl font-bold text-center text-orange-500 mb-8 border-b border-gray-700 pb-4">BMF ADMIN</h2>
+                    <ul class="space-y-3">
+                        <li><div class="sidebar-link active" data-target="overview"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h7.5" /></svg>Overview</div></li>
+                        <li class="relative"><div class="sidebar-link" data-target="deposits"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>Deposit Requests</div><div id="deposits-badge" class="notification-badge hidden">0</div></li>
+                        <li class="relative"><div class="sidebar-link" data-target="withdrawals"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>Withdrawal Requests</div><div id="withdrawals-badge" class="notification-badge hidden">0</div></li>
+                        <li><div class="sidebar-link" data-target="users"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.003c0 1.113.285 2.16.786 3.07m-6.136-7.854a4.125 4.125 0 11-7.533-2.493 4.125 4.125 0 017.533 2.493zM3.513 12.343a4.125 4.125 0 117.533 2.493m-7.533-2.493c0 1.113.285 2.16.786 3.07" /></svg>Manage Users</div></li>
+                    </ul>
+                </div>
+                <button id="admin-logout-btn" class="sidebar-link w-full text-red-400 hover:bg-red-800/50"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" /></svg>Logout</button>
             </nav>
-            
-            <!-- Main Content Area -->
-            <main class="flex-grow p-6">
-                <!-- Dashboard Page -->
-                <div id="admin-page-dashboard">
-                    <h2 class="text-2xl font-bold text-slate-800 mb-4">Dashboard</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div class="bg-white p-4 rounded-lg shadow"><p class="text-slate-600">Total Users</p><p id="total-users-stat" class="text-3xl font-bold text-gray-800">0</p></div>
-                        <div class="bg-white p-4 rounded-lg shadow"><p class="text-slate-600">Total Platform Assets</p><p id="total-assets-stat" class="text-3xl font-bold text-gray-800">Ksh 0.00</p></div>
-                        <div class="bg-white p-4 rounded-lg shadow"><p class="text-slate-600">Pending Deposits</p><p id="pending-deposits-stat" class="text-3xl font-bold text-orange-500">0</p></div>
-                        <div class="bg-white p-4 rounded-lg shadow"><p class="text-slate-600">Pending Withdrawals</p><p id="pending-withdrawals-stat" class="text-3xl font-bold text-orange-500">0</p></div>
-                    </div>
-                </div>
 
-                <!-- Users Page -->
-                <div id="admin-page-users" class="hidden">
-                    <h2 class="text-2xl font-bold text-slate-800 mb-4">All Users</h2>
-                    <div id="all-users-list" class="bg-white p-4 rounded-lg shadow max-h-[75vh] overflow-y-auto"></div>
-                </div>
-
-                <!-- Deposits Page -->
-                <div id="admin-page-deposits" class="hidden">
-                    <h2 class="text-2xl font-bold text-slate-800 mb-4">Deposit Requests</h2>
-                    <div id="deposit-requests-list" class="bg-white p-4 rounded-lg shadow"></div>
-                </div>
-
-                <!-- Withdrawals Page -->
-                <div id="admin-page-withdrawals" class="hidden">
-                    <h2 class="text-2xl font-bold text-slate-800 mb-4">Withdrawal Requests</h2>
-                    <div id="withdrawal-requests-list" class="bg-white p-4 rounded-lg shadow"></div>
-                </div>
+            <main class="flex-1 p-6 md:p-10 bg-gray-100 overflow-y-auto">
+                <header class="mb-8"><h1 id="page-title" class="text-4xl font-bold text-gray-800">Overview</h1></header>
+                <div id="overview-section" class="content-section active"><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"><div class="stat-card"><h3 class="text-gray-500 font-semibold">Total Users</h3><p id="total-users-stat" class="text-3xl font-bold text-gray-800">0</p></div><div class="stat-card"><h3 class="text-gray-500 font-semibold">Total Platform Assets</h3><p id="total-assets-stat" class="text-3xl font-bold text-gray-800">Ksh 0.00</p></div><div class="stat-card"><h3 class="text-gray-500 font-semibold">Pending Deposits</h3><p id="pending-deposits-stat" class="text-3xl font-bold text-orange-500">0</p></div><div class="stat-card"><h3 class="text-gray-500 font-semibold">Pending Withdrawals</h3><p id="pending-withdrawals-stat" class="text-3xl font-bold text-orange-500">0</p></div></div></div>
+                <div id="deposits-section" class="content-section"><div id="deposits-list" class="space-y-4 bg-white p-4 rounded-lg shadow"></div></div>
+                <div id="withdrawals-section" class="content-section"><div id="withdrawals-list" class="space-y-4 bg-white p-4 rounded-lg shadow"></div></div>
+                <div id="users-section" class="content-section"><div id="users-list" class="space-y-4 bg-white p-4 rounded-lg shadow max-h-[75vh] overflow-y-auto"></div></div>
             </main>
         </div>
     </div>
-
-    <!-- Modals -->
-    <div id="manage-user-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-40 p-4">
-        <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md text-gray-800">
-            <h3 class="font-bold text-xl mb-4" id="manage-user-title">Manage: User</h3>
-            <div class="space-y-4">
-                <div>
-                    <label for="manage-level-select" class="block text-sm font-medium text-gray-700">Set/Update Investment Level</label>
-                    <select id="manage-level-select" class="mt-1 block w-full px-3 py-2 bg-slate-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"></select>
-                </div>
-                <div>
-                    <label for="manage-bonus-select" class="block text-sm font-medium text-gray-700">Add 5% Referral Bonus to Sponsor?</label>
-                    <select id="manage-bonus-select" class="mt-1 block w-full px-3 py-2 bg-slate-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500">
-                        <option value="no">No</option>
-                        <option value="yes">Yes</option>
-                    </select>
-                     <p class="text-xs text-slate-500 mt-1">Updating the level will activate the user and start a 180-day contract.</p>
-                </div>
-            </div>
-            <div class="mt-6 flex justify-end space-x-3">
-                <button id="close-manage-modal-btn" class="bg-slate-200 text-slate-700 font-bold py-2 px-4 rounded-lg hover:bg-slate-300">Close</button>
-                <button id="update-user-btn" class="bg-orange-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-orange-600">Update User & Activate</button>
-            </div>
-        </div>
-    </div>
+    
+    <div id="user-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-40 p-4"><div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md text-gray-800"><h3 class="font-bold text-xl mb-4" id="modal-username">User Details</h3><div class="space-y-4"><div><label for="modal-level-select" class="block text-sm font-medium text-gray-700">Set/Update Investment Level</label><select id="modal-level-select" class="mt-1 block w-full px-3 py-2 bg-slate-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"></select></div><div><label for="modal-assets-input" class="block text-sm font-medium text-gray-700">Edit Total Assets (Ksh)</label><input type="number" id="modal-assets-input" class="mt-1 block w-full px-3 py-2 bg-slate-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"></div><div><label for="modal-bonus-select" class="block text-sm font-medium text-gray-700">Add 5% Referral Bonus to Sponsor?</label><select id="modal-bonus-select" class="mt-1 block w-full px-3 py-2 bg-slate-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"><option value="no">No</option><option value="yes">Yes</option></select><p class="text-xs text-slate-500 mt-1">Updating the level will also (re)start a 180-day contract.</p></div></div><div class="mt-6 flex justify-end space-x-3"><button id="close-user-modal-btn" class="bg-slate-200 text-slate-700 font-bold py-2 px-4 rounded-lg hover:bg-slate-300">Close</button><button id="update-user-btn" class="bg-orange-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-orange-600">Update User</button></div></div></div>
     <div id="message-modal" class="hidden fixed top-5 right-5 bg-green-500 text-white py-2 px-4 rounded-lg shadow-xl z-50 animate-pulse"><p id="message-modal-text"></p></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, onSnapshot, doc, updateDoc, deleteDoc, getDoc, query, orderBy, increment, serverTimestamp, writeBatch, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, updateDoc, onSnapshot, query, orderBy, getDoc, deleteDoc, increment, addDoc, serverTimestamp, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         document.addEventListener("DOMContentLoaded", () => {
-            // --- BMF App Config ---
             const firebaseConfig = { apiKey: "AIzaSyAwf6foE2lZcv90wnQIRXguq-Z7jkIX8r8", authDomain: "bmf-6447b.firebaseapp.com", projectId: "bmf-6447b", storageBucket: "bmf-6447b.appspot.com", messagingSenderId: "249416500752", appId: "1:249416500752:web:88d421c17752fd08e7ac95", measurementId: "G-2SS309VMLB" };
             const ADMIN_EMAIL = 'cleophasamutete@gmail.com';
             const INVESTMENT_LEVELS = { 'freelance-1': { name: 'Freelance 1', investment: 4000 }, 'freelance-2': { name: 'Freelance 2', investment: 10000 }, 'freelance-3': { name: 'Freelance 3', investment: 25000 }, 'freelance-4': { name: 'Freelance 4', investment: 50000 }, 'manager-1': { name: 'Teamleader', investment: 100000 }, 'manager-2': { name: 'Supervisor', investment: 200000 }, 'manager-3': { name: 'Manager', investment: 500000 },'None': { name: 'None', investment: 0 }};
-            const INACTIVITY_TIMEOUT = 15 * 60 * 1000; // 15 minutes
             
-            let app, auth, db;
-            let inactivityTimer;
-
-            // --- Initialization ---
+            let app, auth, db, selectedUserId = null, selectedNotifDocId = null;
             try { app = initializeApp(firebaseConfig); auth = getAuth(app); db = getFirestore(app); } 
-            catch (e) { console.error("Firebase init failed:", e); return; }
+            catch (e) { console.error("Firebase init failed:", e); }
 
-            // --- DOM Elements ---
             const DOMElements = {
-                authContainer: document.getElementById('admin-auth-container'),
-                appContainer: document.getElementById('admin-app-container'),
-                errorMessage: document.getElementById('admin-error-message'),
-                loginForm: document.getElementById('admin-login-form'),
-                logoutBtn: document.getElementById('admin-logout-btn'),
-                navItems: document.querySelectorAll('.admin-nav-item'),
-                pages: { 
-                    dashboard: document.getElementById('admin-page-dashboard'), 
-                    users: document.getElementById('admin-page-users'), 
-                    deposits: document.getElementById('admin-page-deposits'), 
-                    withdrawals: document.getElementById('admin-page-withdrawals'), 
-                },
-                allUsersList: document.getElementById('all-users-list'),
-                depositRequestsList: document.getElementById('deposit-requests-list'),
-                withdrawalRequestsList: document.getElementById('withdrawal-requests-list'),
-                totalUsersStat: document.getElementById('total-users-stat'),
-                totalAssetsStat: document.getElementById('total-assets-stat'),
-                pendingDepositsStat: document.getElementById('pending-deposits-stat'),
-                pendingWithdrawalsStat: document.getElementById('pending-withdrawals-stat'),
-                messageModal: document.getElementById('message-modal'),
-                messageModalText: document.getElementById('message-modal-text'),
-                manageUserModal: document.getElementById('manage-user-modal'),
-                manageUserTitle: document.getElementById('manage-user-title'),
-                manageLevelSelect: document.getElementById('manage-level-select'),
-                manageBonusSelect: document.getElementById('manage-bonus-select'),
-                closeManageModalBtn: document.getElementById('close-manage-modal-btn'),
-                updateUserBtn: document.getElementById('update-user-btn'),
+                loginContainer: document.getElementById('admin-login-container'), panelContainer: document.getElementById('admin-panel-container'),
+                loginForm: document.getElementById('admin-login-form'), errorMessage: document.getElementById('admin-error-message'), logoutBtn: document.getElementById('admin-logout-btn'),
+                navItems: document.querySelectorAll('.sidebar-link'), pages: { overview: document.getElementById('overview-section'), users: document.getElementById('users-section'), deposits: document.getElementById('deposits-section'), withdrawals: document.getElementById('withdrawals-section'), },
+                depositsList: document.getElementById('deposits-list'), withdrawalsList: document.getElementById('withdrawals-list'), usersList: document.getElementById('users-list'),
+                userModal: document.getElementById('user-modal'), modalUsername: document.getElementById('modal-username'), modalLevelSelect: document.getElementById('modal-level-select'), modalAssetsInput: document.getElementById('modal-assets-input'), modalBonusSelect: document.getElementById('modal-bonus-select'),
+                updateUserBtn: document.getElementById('update-user-btn'), closeModalBtn: document.getElementById('close-user-modal-btn'),
+                pageTitle: document.getElementById('page-title'), statTotalUsers: document.getElementById('total-users-stat'), statTotalAssets: document.getElementById('total-assets-stat'), statPendingDeposits: document.getElementById('pending-deposits-stat'), statPendingWithdrawals: document.getElementById('pending-withdrawals-stat'),
+                depositsBadge: document.getElementById('deposits-badge'), withdrawalsBadge: document.getElementById('withdrawals-badge'), messageModal: document.getElementById('message-modal'), messageModalText: document.getElementById('message-modal-text')
             };
-            
-            let selectedNotifDocId = null;
 
-            // --- Helper & Core Functions ---
             const showMessage = (text, isError = false) => { DOMElements.messageModalText.textContent = text; DOMElements.messageModal.classList.toggle('bg-red-500', isError); DOMElements.messageModal.classList.toggle('bg-green-500', !isError); DOMElements.messageModal.classList.remove('hidden'); setTimeout(() => DOMElements.messageModal.classList.add('hidden'), 3500); };
-            const switchPage = (pageName) => { Object.values(DOMElements.pages).forEach(p => p.classList.add('hidden')); if (DOMElements.pages[pageName]) DOMElements.pages[pageName].classList.remove('hidden'); DOMElements.navItems.forEach(item => item.classList.toggle('active', item.dataset.page === pageName)); };
+            const updateBadge = (badge, count) => { badge.textContent = count; badge.classList.toggle('hidden', count === 0); };
             const formatCurrency = (amount) => `Ksh ${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-
-            const resetInactivityTimer = () => {
-                clearTimeout(inactivityTimer);
-                inactivityTimer = setTimeout(() => {
-                    showMessage("Logged out due to inactivity.", true);
-                    signOut(auth);
-                }, INACTIVITY_TIMEOUT);
-            };
-
-            const setupInactivityDetection = () => {
-                window.addEventListener('mousemove', resetInactivityTimer);
-                window.addEventListener('keypress', resetInactivityTimer);
-                resetInactivityTimer();
-            };
-
-            // --- Render Functions ---
-            const renderAllUsers = (users) => {
-                let totalAssets = 0;
-                users.forEach(u => totalAssets += u.totalAssets || 0);
-                DOMElements.totalUsersStat.textContent = users.length;
-                DOMElements.totalAssetsStat.textContent = formatCurrency(totalAssets);
-
-                DOMElements.allUsersList.innerHTML = `
-                    <table class="min-w-full text-sm text-left">
-                        <thead class="bg-slate-100"><tr>
-                            <th class="p-2">Username</th><th>Email</th><th>Level</th><th>Balance</th><th>Contract Ends</th><th>Actions</th>
-                        </tr></thead>
-                        <tbody>${users.map(u => {
-                            let daysRemaining = 'N/A';
-                            if (u.contractEndDate && u.contractEndDate.toDate) {
-                                const diffDays = Math.ceil((u.contractEndDate.toDate() - new Date()) / (1000 * 60 * 60 * 24));
-                                daysRemaining = diffDays > 0 ? `${diffDays} days` : 'Expired';
-                            }
-                            return `<tr class="border-b">
-                                <td class="p-2 font-semibold">${u.username}</td><td>${u.email}</td>
-                                <td>${INVESTMENT_LEVELS[u.investmentLevel]?.name || 'N/A'}</td><td>${formatCurrency(u.totalAssets)}</td>
-                                <td>${daysRemaining}</td>
-                                <td><button data-user='${JSON.stringify(u)}' class="manage-user-btn bg-blue-500 text-white px-2 py-1 text-xs rounded hover:bg-blue-600">Manage</button></td>
-                            </tr>`}).join('')}
-                        </tbody>
-                    </table>`;
-            };
-
-            const renderRequests = (requests, listElement, type) => {
-                 listElement.innerHTML = requests.length === 0 ? '<p class="text-slate-500">No pending requests.</p>' : `
-                    <div class="space-y-3">${requests.map(r => `
-                        <div class="bg-slate-50 p-3 rounded-lg flex justify-between items-center">
-                            <div>
-                                <p class="font-semibold">${r.username}</p>
-                                <p class="text-sm text-slate-600">${type === 'withdrawal' ? `requests a withdrawal of <span class="font-bold">${formatCurrency(r.amount)}</span>` : 'has notified of a deposit.'}</p>
-                                <p class="text-xs text-slate-400">${r.timestamp.toDate().toLocaleString()}</p>
-                            </div>
-                            <div>
-                                ${type === 'deposit' 
-                                    ? `<button data-user='${JSON.stringify(r)}' data-docid="${r.id}" class="activate-user-btn bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">Activate User</button>` 
-                                    : `<button data-id="${r.id}" data-uid="${r.userId}" data-amount="${r.amount}" class="approve-withdrawal-btn bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600">Approve</button>`
-                                }
-                            </div>
-                        </div>`).join('')}
-                    </div>`;
-            };
-
-            const openManageUserModal = (user) => {
-                DOMElements.manageUserTitle.textContent = `Manage: ${user.username}`;
-                DOMElements.updateUserBtn.dataset.uid = user.uid;
-                
-                DOMElements.manageLevelSelect.innerHTML = Object.keys(INVESTMENT_LEVELS).map(key => `<option value="${key}" ${key === user.investmentLevel ? 'selected' : ''}>${INVESTMENT_LEVELS[key].name}</option>`).join('');
-                DOMElements.manageBonusSelect.value = 'no';
-                DOMElements.manageUserModal.classList.remove('hidden');
-            };
-
-            // --- Event Handlers ---
-            DOMElements.loginForm.addEventListener('submit', async (e) => { 
-                e.preventDefault(); 
-                DOMElements.errorMessage.textContent = ''; 
-                const email = DOMElements.loginForm['admin-login-email'].value; 
-                if (email.toLowerCase() !== ADMIN_EMAIL) { 
-                    DOMElements.errorMessage.textContent = 'Access denied. Incorrect email.'; 
-                    return; 
-                } 
-                try { 
-                    await signInWithEmailAndPassword(auth, email, DOMElements.loginForm['admin-login-password'].value); 
-                } catch (error) { 
-                    DOMElements.errorMessage.textContent = error.message.replace('Firebase: ', ''); 
-                } 
-            });
-
-            DOMElements.logoutBtn.addEventListener('click', () => signOut(auth));
-            DOMElements.navItems.forEach(item => item.addEventListener('click', () => switchPage(item.dataset.page)));
+            const openUserModal = (user) => { selectedUserId = user.uid; DOMElements.modalUsername.textContent = `Manage: ${user.username}`; DOMElements.modalLevelSelect.value = user.investmentLevel || 'None'; DOMElements.modalAssetsInput.value = user.totalAssets; DOMElements.modalBonusSelect.value = 'no'; DOMElements.userModal.classList.remove('hidden'); };
+            const populateLevelSelect = () => { DOMElements.modalLevelSelect.innerHTML = Object.keys(INVESTMENT_LEVELS).map(key => `<option value="${key}">${INVESTMENT_LEVELS[key].name}</option>`).join(''); };
             
-            DOMElements.allUsersList.addEventListener('click', (e) => {
-                if(e.target.classList.contains('manage-user-btn')) openManageUserModal(JSON.parse(e.target.dataset.user));
-            });
-
-            DOMElements.depositRequestsList.addEventListener('click', (e) => {
-                 if (e.target.classList.contains('activate-user-btn')) {
-                    const user = JSON.parse(e.target.dataset.user);
-                    selectedNotifDocId = e.target.dataset.docid;
-                    openManageUserModal({uid: user.userId, username: user.username, investmentLevel: 'None'});
-                    showMessage("Set the user's level to activate their account.", false);
-                 }
-            });
-
-            DOMElements.withdrawalRequestsList.addEventListener('click', async (e) => {
-                 if(e.target.classList.contains('approve-withdrawal-btn')){
-                    if(!confirm("CONFIRM: Have you already sent the money to the user? This action will deduct funds from their app balance and cannot be undone.")) return;
-                    try {
-                        const batch = writeBatch(db);
-                        const userRef = doc(db, 'users', e.target.dataset.uid);
-                        const notifRef = doc(db, 'admin_notifications', e.target.dataset.id);
-                        batch.update(userRef, { totalAssets: increment(-parseFloat(e.target.dataset.amount)) });
-                        batch.delete(notifRef);
-                        await batch.commit();
-                        showMessage("Success! Withdrawal approved and user assets deducted.");
-                    } catch (err) { showMessage("Error: " + err.message, true); }
-                }
-            });
+            const loadAllData = () => { listenForNotifications(); listenForUsers(); };
             
-            DOMElements.closeManageModalBtn.addEventListener('click', () => {
-                DOMElements.manageUserModal.classList.add('hidden');
-                selectedNotifDocId = null;
-            });
-
-            DOMElements.updateUserBtn.addEventListener('click', async (e) => {
-                const uid = e.target.dataset.uid;
-                if (!uid) return;
-                
-                const newLevel = DOMElements.manageLevelSelect.value;
-                const giveBonus = DOMElements.manageBonusSelect.value === 'yes';
-                const userRef = doc(db, 'users', uid);
-                
-                try {
-                    const batch = writeBatch(db);
-                    let contractEndDate = new Date(); 
-                    contractEndDate.setDate(contractEndDate.getDate() + 180);
-                    batch.update(userRef, { 
-                        investmentLevel: newLevel, 
-                        contractEndDate: newLevel !== 'None' ? contractEndDate : null 
-                    });
-
-                    // If this update came from a deposit notification, delete the notification
-                    if(selectedNotifDocId) { 
-                        const notifRef = doc(db, 'admin_notifications', selectedNotifDocId);
-                        batch.delete(notifRef); 
-                    }
-                    
-                    if (giveBonus) {
-                        const userDoc = await getDoc(userRef);
-                        const userData = userDoc.data();
-                        if(userData.referrerId) {
-                            const levelInfo = INVESTMENT_LEVELS[newLevel];
-                            if(levelInfo && levelInfo.investment > 0) {
-                                const bonusAmount = levelInfo.investment * 0.05;
-                                const referrerRef = doc(db, "users", userData.referrerId);
-                                batch.update(referrerRef, { totalAssets: increment(bonusAmount) });
-                                
-                                const transactionColRef = collection(db, "transactions");
-                                batch.set(doc(transactionColRef), { userId: userData.referrerId, amount: bonusAmount, type: 'referral-5%', fromUser: userData.username, timestamp: serverTimestamp() });
-                                
-                                showMessage(`User updated. Bonus of ${formatCurrency(bonusAmount)} sent to referrer.`);
-                            } else {
-                               showMessage("User updated, but bonus not sent (invalid level).", true);
-                            }
-                        } else { 
-                            showMessage("User updated. No referrer found for bonus."); 
+            const listenForNotifications = () => {
+                const q = query(collection(db, 'admin_notifications'), orderBy('timestamp', 'desc'));
+                onSnapshot(q, (snapshot) => {
+                    DOMElements.depositsList.innerHTML = '<p class="text-gray-500 p-4 text-center">No new deposit requests.</p>';
+                    DOMElements.withdrawalsList.innerHTML = '<p class="text-gray-500 p-4 text-center">No new withdrawal requests.</p>';
+                    let depositCount = 0, withdrawalCount = 0, hasDeposits = false, hasWithdrawals = false;
+                    snapshot.forEach(docSnap => {
+                        const notif = docSnap.data(); const el = document.createElement('div'); el.className = 'border p-3 rounded-lg shadow-sm';
+                        if (notif.type === 'deposit_paid') {
+                            if (!hasDeposits) DOMElements.depositsList.innerHTML = '';
+                            el.innerHTML = `<div><p><span class="font-semibold">${notif.username}</span> reported a deposit.</p><p class="text-xs text-gray-500">${notif.timestamp.toDate().toLocaleString()}</p></div><button data-uid="${notif.userId}" data-uname="${notif.username}" data-docid="${docSnap.id}" class="activate-user-btn mt-2 bg-blue-500 text-white text-sm font-semibold py-1 px-3 rounded hover:bg-blue-600">Activate User</button>`;
+                            DOMElements.depositsList.appendChild(el); depositCount++; hasDeposits = true;
+                        } else if (notif.type === 'withdrawal_request') {
+                            if (!hasWithdrawals) DOMElements.withdrawalsList.innerHTML = '';
+                            el.innerHTML = `<div><p><span class="font-semibold">${notif.username}</span> requests <span class="font-bold">${formatCurrency(notif.amount)}</span>.</p><p class="text-xs text-gray-500">${notif.timestamp.toDate().toLocaleString()}</p></div><div class="flex space-x-2 mt-2"><button data-uid="${notif.userId}" data-amount="${notif.amount}" data-docid="${docSnap.id}" class="approve-withdrawal-btn flex-1 bg-green-500 text-white text-sm font-semibold py-1 px-3 rounded hover:bg-green-600">Approve</button><button data-uid="${notif.userId}" data-amount="${notif.amount}" data-docid="${docSnap.id}" class="reject-withdrawal-btn flex-1 bg-yellow-500 text-white text-sm font-semibold py-1 px-3 rounded hover:bg-yellow-600">Reject</button></div>`;
+                            DOMElements.withdrawalsList.appendChild(el); withdrawalCount++; hasWithdrawals = true;
                         }
-                    } else {
-                         showMessage('User updated successfully!'); 
+                    });
+                    updateBadge(DOMElements.depositsBadge, depositCount); updateBadge(DOMElements.withdrawalsBadge, withdrawalCount);
+                    DOMElements.statPendingDeposits.textContent = depositCount; DOMElements.statPendingWithdrawals.textContent = withdrawalCount;
+                });
+            };
+            const listenForUsers = () => {
+                const q = query(collection(db, 'users'), orderBy('createdAt', 'desc'));
+                onSnapshot(q, (snapshot) => {
+                    DOMElements.usersList.innerHTML = '<p class="text-gray-500 p-4 text-center">No registered users.</p>';
+                    if (snapshot.empty) { DOMElements.statTotalUsers.textContent = 0; DOMElements.statTotalAssets.textContent = formatCurrency(0); return; }
+                    DOMElements.usersList.innerHTML = ''; let totalAssets = 0;
+                    snapshot.forEach(docSnap => {
+                        const user = {...docSnap.data(), uid: docSnap.id}; const el = document.createElement('div'); el.className = 'border p-3 rounded-lg shadow-sm';
+                        let daysRemaining = 'N/A', contractStatus = user.investmentLevel === 'None' ? 'Inactive' : `Level: ${INVESTMENT_LEVELS[user.investmentLevel]?.name || 'Unknown'}`;
+                        if(user.contractEndDate?.toDate){ const diffDays = Math.ceil((user.contractEndDate.toDate() - new Date()) / (1000 * 60 * 60 * 24)); daysRemaining = diffDays > 0 ? `${diffDays} days` : 'Expired'; }
+                        el.innerHTML = `<div class="flex justify-between items-start"><div><p class="font-bold">${user.username} <span class="text-sm font-medium text-gray-600">(${user.email})</span></p><p class="text-sm text-green-700 font-semibold">Assets: ${formatCurrency(user.totalAssets)}</p><p class="text-xs text-gray-500">${contractStatus} | Contract Ends: <span class="font-medium">${daysRemaining}</span></p></div><div class="flex flex-col space-y-2"><button data-user='${JSON.stringify(user)}' class="manage-user-btn bg-gray-600 text-white text-xs font-semibold py-1 px-3 rounded hover:bg-gray-700">Manage</button><button data-uid="${user.uid}" data-uname="${user.username}" class="delete-user-btn bg-red-600 text-white text-xs font-semibold py-1 px-3 rounded hover:bg-red-700">Delete</button></div></div>`;
+                        DOMElements.usersList.appendChild(el); totalAssets += user.totalAssets || 0;
+                    });
+                    DOMElements.statTotalUsers.textContent = snapshot.size; DOMElements.statTotalAssets.textContent = formatCurrency(totalAssets);
+                });
+            };
+
+            // --- Event Listeners ---
+            onAuthStateChanged(auth, user => { DOMElements.loginContainer.style.display = 'none'; DOMElements.panelContainer.classList.add('hidden'); if (user && user.email.toLowerCase() === ADMIN_EMAIL) { DOMElements.panelContainer.classList.remove('hidden'); populateLevelSelect(); loadAllData(); } else { DOMElements.loginContainer.style.display = 'flex'; if (user) signOut(auth); } });
+            DOMElements.loginForm.addEventListener('submit', async e => { e.preventDefault(); const email = DOMElements.loginForm['admin-email'].value; DOMElements.errorMessage.textContent = ''; if (email.toLowerCase() !== ADMIN_EMAIL) { DOMElements.errorMessage.textContent = "Unauthorized email."; return; } try { await signInWithEmailAndPassword(auth, email, DOMElements.loginForm['admin-password'].value); } catch (e) { DOMElements.errorMessage.textContent = e.message; } });
+            DOMElements.logoutBtn.addEventListener('click', () => signOut(auth));
+            
+            document.addEventListener('click', async e => {
+                if (e.target.classList.contains('manage-user-btn')) { openUserModal(JSON.parse(e.target.dataset.user)); }
+                if (e.target.classList.contains('activate-user-btn')) { selectedNotifDocId = e.target.dataset.docid; openUserModal({uid: e.target.dataset.uid, username: e.target.dataset.uname, totalAssets: 0, investmentLevel: 'None'}); showMessage("Set user's level to activate their account.", false); }
+                if (e.target.classList.contains('approve-withdrawal-btn')) { if (!confirm("Are you sure you have sent the money? This will approve the request.")) return; try { await deleteDoc(doc(db, 'admin_notifications', e.target.dataset.docid)); showMessage("Withdrawal approved."); } catch (err) { showMessage("Error: " + err.message, true); } }
+                if (e.target.classList.contains('reject-withdrawal-btn')) { if (!confirm("Reject this withdrawal? Funds will be returned to the user.")) return; try { const userRef = doc(db, 'users', e.target.dataset.uid); await updateDoc(userRef, { totalAssets: increment(parseFloat(e.target.dataset.amount)) }); await deleteDoc(doc(db, 'admin_notifications', e.target.dataset.docid)); showMessage("Withdrawal rejected and funds returned."); } catch (err) { showMessage("Error: " + err.message, true); } }
+                if (e.target.classList.contains('delete-user-btn')) { const uname = e.target.dataset.uname; if (!confirm(`DANGER: Permanently delete user data for "${uname}"? This cannot be undone. You must also delete their login from the Firebase Authentication console.`)) return; try { await deleteDoc(doc(db, "users", e.target.dataset.uid)); showMessage(`User data for "${uname}" has been deleted.`); } catch (err) { showMessage("Error deleting user data: " + err.message, true); } }
+            });
+            
+            DOMElements.closeModalBtn.addEventListener('click', () => { DOMElements.userModal.classList.add('hidden'); selectedNotifDocId = null; });
+            DOMElements.updateUserBtn.addEventListener('click', async () => {
+                if (!selectedUserId) return;
+                const newLevel = DOMElements.modalLevelSelect.value;
+                const newAssets = parseFloat(DOMElements.modalAssetsInput.value);
+                const giveBonus = DOMElements.modalBonusSelect.value === 'yes';
+                if (isNaN(newAssets)) { showMessage("Invalid assets amount.", true); return; }
+
+                const userRef = doc(db, 'users', selectedUserId);
+                try {
+                    const userDoc = await getDoc(userRef);
+                    const userData = userDoc.data();
+                    const batch = writeBatch(db);
+                    const updatePayload = { investmentLevel: newLevel, totalAssets: newAssets };
+
+                    if (newLevel !== 'None' && userData.investmentLevel === 'None') {
+                        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                        updatePayload.activationDay = days[new Date().getDay()];
+                        updatePayload.contractEndDate = new Date(new Date().setDate(new Date().getDate() + 180));
+                        updatePayload.lastWithdrawalDate = null;
+                    }
+                    batch.update(userRef, updatePayload);
+                    if (selectedNotifDocId) { batch.delete(doc(db, 'admin_notifications', selectedNotifDocId)); }
+                    
+                    if (giveBonus && userData.referrerId) {
+                        const levelInfo = INVESTMENT_LEVELS[newLevel];
+                        if (levelInfo?.investment > 0) {
+                            const bonusAmount = levelInfo.investment * 0.05;
+                            batch.update(doc(db, "users", userData.referrerId), { totalAssets: increment(bonusAmount) });
+                            batch.set(doc(collection(db, "transactions")), { userId: userData.referrerId, amount: bonusAmount, type: 'referral-5%', fromUser: userData.username, timestamp: serverTimestamp() });
+                        }
                     }
                     
                     await batch.commit();
-                    DOMElements.manageUserModal.classList.add('hidden'); 
+                    showMessage('User updated successfully!');
+                    DOMElements.userModal.classList.add('hidden');
+                    selectedUserId = null;
                     selectedNotifDocId = null;
-
-                } catch (err) { showMessage("An error occurred: " + err.message, true); console.error(err); }
+                } catch (err) { showMessage("Error: " + err.message, true); }
             });
 
-
-            // --- Auth State & Firestore Snapshots ---
-            onAuthStateChanged(auth, user => {
-                if (user && user.email.toLowerCase() === ADMIN_EMAIL) {
-                    DOMElements.authContainer.style.display = 'none'; 
-                    DOMElements.appContainer.style.display = 'block'; 
-                    switchPage('dashboard');
-                    setupInactivityDetection();
-
-                    onSnapshot(query(collection(db, "users"), orderBy('createdAt', 'desc')), (snapshot) => {
-                        const users = snapshot.docs.map(d => ({...d.data(), uid: d.id}));
-                        renderAllUsers(users);
-                    });
-                    
-                    const notifQuery = query(collection(db, "admin_notifications"), orderBy('timestamp', 'desc'));
-                    onSnapshot(notifQuery, (snapshot) => { 
-                        const allNotifs = snapshot.docs.map(d=>({...d.data(), id: d.id}));
-                        
-                        const deposits = allNotifs.filter(n => n.type === 'deposit_paid');
-                        renderRequests(deposits, DOMElements.depositRequestsList, 'deposit'); 
-                        DOMElements.pendingDepositsStat.textContent = deposits.length;
-                        
-                        const withdrawals = allNotifs.filter(n => n.type === 'withdrawal_request');
-                        renderRequests(withdrawals, DOMElements.withdrawalRequestsList, 'withdrawal');
-                        DOMElements.pendingWithdrawalsStat.textContent = withdrawals.length;
-                    });
-                } else {
-                    DOMElements.authContainer.style.display = 'flex'; 
-                    DOMElements.appContainer.style.display = 'none';
-                    clearTimeout(inactivityTimer);
-                    window.removeEventListener('mousemove', resetInactivityTimer);
-                    window.removeEventListener('keypress', resetInactivityTimer);
-                }
-            });
+            DOMElements.navItems.forEach(link => { link.addEventListener('click', (e) => { e.preventDefault(); const targetId = link.dataset.target; if (!targetId) return; document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active')); link.classList.add('active'); document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active')); document.getElementById(`${targetId}-section`).classList.add('active'); DOMElements.pageTitle.textContent = targetId.charAt(0).toUpperCase() + targetId.slice(1); }); });
         });
     </script>
 </body>
