@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BMF - Investment App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        .bmf-logo-text { font-weight: 900; letter-spacing: -0.05em; text-shadow: 2px 2px 4px rgba(0,0,0,0.1); }
+        .nav-item.active { color: #f97316; }
+        .btn-disabled { background-color: #d1d5db; cursor: not-allowed; }
+        .notification-dot { display: none; }
+        .notification-dot.active { display: block; }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <div id="auth-container" class="min-h-screen bg-gradient-to-br from-orange-400 to-orange-600 flex flex-col items-center justify-center p-4">
+        <h1 class="text-7xl font-black text-white bmf-logo-text mb-6">BMF</h1>
+        <div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-6">
+            <div class="flex border-b border-gray-200">
+                <button id="login-tab-btn" class="flex-1 py-3 font-semibold text-lg border-b-4 border-orange-500 text-orange-500">Login</button>
+                <button id="signup-tab-btn" class="flex-1 py-3 font-semibold text-lg text-gray-500">Sign Up</button>
+            </div>
+            <div id="error-message" class="mt-4 text-center text-red-500 font-medium h-auto"></div>
+            <div class="mt-6">
+                <form id="login-form">
+                    <div class="mb-4"><label for="login-email" class="block text-sm font-medium text-gray-700">Email</label><input type="email" id="login-email" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"></div>
+                    <div class="mb-6"><label for="login-password" class="block text-sm font-medium text-gray-700">Password</label><input type="password" id="login-password" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"></div>
+                    <button type="submit" class="w-full bg-orange-500 text-white font-bold py-3 px-4 rounded-lg hover:bg-orange-600 transition duration-300 shadow-lg">Login</button>
+                </form>
+                <form id="signup-form" class="hidden">
+                    <div class="mb-4"><label for="signup-username" class="block text-sm font-medium text-gray-700">Username</label><input type="text" id="signup-username" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"></div>
+                    <div class="mb-4"><label for="signup-email" class="block text-sm font-medium text-gray-700">Email</label><input type="email" id="signup-email" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"></div>
+                    <div class="mb-4">
+                        <label for="signup-password" class="block text-sm font-medium text-gray-700">Password</label>
+                        <input type="password" id="signup-password" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500">
+                        <p class="text-xs text-gray-500 mt-1">8+ characters, with uppercase, lowercase, number, and special character.</p>
+                    </div>
+                    <div class="mb-6"><label for="signup-confirm-password" class="block text-sm font-medium text-gray-700">Confirm Password</label><input type="password" id="signup-confirm-password" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"></div>
+                    <button type="submit" class="w-full bg-orange-500 text-white font-bold py-3 px-4 rounded-lg hover:bg-orange-600 transition duration-300 shadow-lg">Create Account</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="app-container" class="hidden w-full max-w-lg mx-auto bg-white flex-col h-screen">
+        <header class="bg-orange-500 text-white p-4 shadow-md flex justify-between items-center z-10 sticky top-0">
+            <div><p class="text-sm">Welcome back,</p><h2 id="user-name-display" class="font-bold text-xl">User</h2></div>
+            <div class="flex items-center">
+                <div class="text-right mr-4"><p class="text-sm">Total Assets</p><h2 id="total-assets-display" class="font-bold text-xl">Ksh 0.00</h2></div>
+                <button id="notification-btn" class="relative">
+                    <i class="fas fa-bell text-2xl"></i>
+                    <div id="notification-dot" class="notification-dot absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></div>
+                </button>
+            </div>
+        </header>
+
+        <main class="flex-grow p-4 overflow-y-auto pb-24">
+            <div id="page-home">
+                <h3 class="font-bold text-2xl text-gray-800 mb-4">Dashboard</h3>
+                <div class="grid grid-cols-2 gap-3 text-center mb-6">
+                    <div id="deposit-btn" class="bg-gray-100 p-4 rounded-xl shadow-sm cursor-pointer hover:bg-gray-200 transition"><i class="fa-solid fa-wallet text-orange-500 text-2xl"></i><p class="font-semibold text-sm mt-1">Deposit</p></div>
+                    <div id="withdraw-btn" class="bg-gray-100 p-4 rounded-xl shadow-sm cursor-pointer hover:bg-gray-200 transition"><i class="fa-solid fa-money-bill-transfer text-orange-500 text-2xl"></i><p class="font-semibold text-sm mt-1">Withdraw</p></div>
+                </div>
+                <div class="space-y-6">
+                    <div>
+                        <h4 class="font-bold text-xl text-gray-700 mb-2">Freelance Levels</h4>
+                        <div class="bg-white rounded-lg shadow overflow-hidden"><table class="min-w-full text-sm"><thead class="bg-gray-50"><tr><th class="py-2 px-2 text-left font-semibold text-gray-600">Investment (Ksh)</th><th class="py-2 px-2 text-center font-semibold text-gray-600">Tasks</th><th class="py-2 px-2 text-right font-semibold text-gray-600">Max Daily (Ksh)</th></tr></thead><tbody class="divide-y divide-gray-200"><tr><td class="py-3 px-2">4,000</td><td class="py-3 px-2 text-center">8</td><td class="py-3 px-2 text-right">130</td></tr><tr><td class="py-3 px-2">10,000</td><td class="py-3 px-2 text-center">8</td><td class="py-3 px-2 text-right">300</td></tr><tr><td class="py-3 px-2">25,000</td><td class="py-3 px-2 text-center">6</td><td class="py-3 px-2 text-right">800</td></tr><tr><td class="py-3 px-2">50,000</td><td class="py-3 px-2 text-center">6</td><td class="py-3 px-2 text-right">1,600</td></tr></tbody></table></div>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-xl text-gray-700 mb-2">Managerial Levels</h4>
+                        <div class="bg-white rounded-lg shadow overflow-hidden"><table class="min-w-full text-sm"><thead class="bg-gray-50"><tr><th class="py-2 px-2 text-left font-semibold text-gray-600">Investment (Ksh)</th><th class="py-2 px-2 text-center font-semibold text-gray-600">Referrals</th><th class="py-2 px-2 text-right font-semibold text-gray-600">Max Daily (Ksh)</th></tr></thead><tbody class="divide-y divide-gray-200"><tr><td class="py-3 px-2">100,000</td><td class="py-3 px-2 text-center">20</td><td class="py-3 px-2 text-right">3,300</td></tr><tr><td class="py-3 px-2">200,000</td><td class="py-3 px-2 text-center">50</td><td class="py-3 px-2 text-right">6,600</td></tr><tr><td class="py-3 px-2">500,000</td><td class="py-3 px-2 text-center">100</td><td class="py-3 px-2 text-right">16,600</td></tr></tbody></table></div>
+                    </div>
+                </div>
+            </div>
+            <div id="page-work" class="hidden text-center">
+                 <h3 class="font-bold text-2xl text-gray-800 mb-6">Today's Tasks</h3>
+                 <div id="work-content" class="bg-gray-50 rounded-lg p-6 shadow-inner min-h-[150px] flex items-center justify-center"></div>
+                 <div id="task-feedback" class="mt-4 text-green-600 font-semibold h-5"></div>
+                 <div class="mt-8 fixed bottom-20 left-0 right-0 max-w-lg mx-auto px-4">
+                    <div class="bg-gray-800 text-white rounded-lg p-4 shadow-2xl">
+                        <p class="text-sm opacity-80">Contract Countdown</p>
+                        <p id="contract-countdown-display" class="text-3xl font-bold">-- Days Remaining</p>
+                    </div>
+                 </div>
+            </div>
+            <div id="page-profit" class="hidden">
+                 <h3 class="font-bold text-2xl text-gray-800 mb-6">Profit Overview</h3>
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="bg-gray-100 p-4 rounded-xl text-center"><p class="font-semibold text-gray-600">Total Task Profits</p><p id="profit-tasks" class="font-bold text-2xl text-gray-800">Ksh 0.00</p></div>
+                    <div class="bg-gray-100 p-4 rounded-xl text-center"><p class="font-semibold text-gray-600">Total Referral Bonuses</p><p id="profit-referrals" class="font-bold text-2xl text-gray-800">Ksh 0.00</p></div>
+                </div>
+                <h4 class="font-bold text-xl text-gray-700 mb-2">Transaction Log</h4>
+                <div id="transaction-log" class="space-y-3"></div>
+            </div>
+            <div id="page-my" class="hidden">
+                <h3 class="font-bold text-2xl text-gray-800 mb-6">My Profile</h3>
+                <div class="bg-white p-4 rounded-lg shadow mb-6"><h4 class="font-bold text-lg text-gray-700 mb-3">Personal Details</h4><div class="space-y-2 text-sm"><p><span class="font-semibold">Username:</span> <span id="my-username"></span></p><p><span class="font-semibold">Email:</span> <span id="my-email"></span></p><p><span class="font-semibold">User ID:</span> <span id="my-userid" class="text-xs text-gray-500"></span></p></div></div>
+                <div class="bg-white p-4 rounded-lg shadow mb-6"><h4 class="font-bold text-lg text-gray-700 mb-3">My Referral Link</h4><div class="bg-gray-100 p-2 rounded-md flex items-center justify-between"><input id="referral-link-input" type="text" readonly value="Loading..." class="bg-transparent text-gray-600 text-xs w-full focus:outline-none"><button id="copy-referral-btn" class="bg-orange-500 text-white px-3 py-1 rounded text-sm font-semibold">Copy</button></div></div>
+                <div class="bg-white p-4 rounded-lg shadow mb-6"><h4 class="font-bold text-lg text-gray-700 mb-3">My Team</h4><div id="my-team-list" class="space-y-2"></div></div>
+                <button id="logout-btn" class="w-full bg-red-500 text-white font-bold py-3 px-4 rounded-lg hover:bg-red-600 transition duration-300 shadow-lg">Logout</button>
+            </div>
+             <div id="page-notifications" class="hidden">
+                <h3 class="font-bold text-2xl text-gray-800 mb-6">Notifications</h3>
+                <div id="notifications-list" class="space-y-3"></div>
+            </div>
+        </main>
+
+        <footer class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around max-w-lg mx-auto">
+             <button data-page="home" class="nav-item flex-1 py-3 text-center text-gray-600 hover:bg-gray-100 transition active"><i class="fas fa-home text-xl"></i><span class="block text-xs font-medium">Home</span></button>
+             <button data-page="work" class="nav-item flex-1 py-3 text-center text-gray-600 hover:bg-gray-100 transition"><i class="fas fa-briefcase text-xl"></i><span class="block text-xs font-medium">Work</span></button>
+             <button data-page="profit" class="nav-item flex-1 py-3 text-center text-gray-600 hover:bg-gray-100 transition"><i class="fas fa-chart-line text-xl"></i><span class="block text-xs font-medium">Profit</span></button>
+             <button data-page="my" class="nav-item flex-1 py-3 text-center text-gray-600 hover:bg-gray-100 transition"><i class="fas fa-user text-xl"></i><span class="block text-xs font-medium">My</span></button>
+        </footer>
+    </div>
+    
+    <!-- Modals -->
+    <div id="deposit-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-40 p-4"><div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm text-center"><h3 class="font-bold text-xl mb-3">Deposit Instructions</h3><p class="text-gray-600 mb-4">Send your investment via M-Pesa to:</p><p class="font-bold text-2xl text-orange-500 bg-gray-100 py-2 rounded-lg mb-6">0745 875 920</p><p class="text-sm text-gray-500 mb-4">After sending, click below to notify the admin.</p><button id="complete-transaction-btn" class="w-full bg-green-500 text-white font-bold py-3 rounded-lg hover:bg-green-600 shadow-lg transition">I Have Paid, Notify Admin</button><button id="close-modal-btn" class="mt-3 text-gray-500 font-semibold">Close</button></div></div>
+    <div id="withdraw-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-40 p-4">
+         <div id="withdraw-step-1" class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm text-center">
+            <h3 class="font-bold text-xl mb-4">Select Withdrawal Amount</h3>
+            <div id="withdraw-options" class="grid grid-cols-2 gap-3"></div>
+            <button id="cancel-withdraw-modal-btn" class="mt-4 w-full text-gray-500 font-semibold">Cancel</button>
+         </div>
+         <div id="withdraw-step-2" class="hidden bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm text-center">
+            <h3 class="font-bold text-xl mb-2">Confirm Withdrawal</h3>
+            <p class="text-gray-600 mb-4">Enter the M-Pesa number to receive <strong id="withdraw-confirm-amount"></strong>.</p>
+            <input type="tel" id="withdraw-phone-number" placeholder="0712345678" class="w-full text-center px-3 py-2 text-lg font-bold bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500">
+            <button id="submit-withdrawal-btn" class="mt-4 w-full bg-orange-500 text-white font-bold py-3 rounded-lg hover:bg-orange-600 shadow-lg transition">Submit Request</button>
+            <button id="back-to-withdraw-options-btn" class="mt-3 text-gray-500 font-semibold">Back</button>
+         </div>
+    </div>
+    <div id="message-modal" class="hidden fixed top-5 right-5 bg-green-500 text-white py-2 px-4 rounded-lg shadow-xl z-50 animate-pulse"><p id="message-modal-text"></p></div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot, updateDoc, increment, collection, addDoc, query, where, getDocs, serverTimestamp, orderBy, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+          apiKey: "AIzaSyAwf6foE2lZcv90wnQIRXguq-Z7jkIX8r8",
+          authDomain: "bmf-6447b.firebaseapp.com",
+          projectId: "bmf-6447b",
+          storageBucket: "bmf-6447b.appspot.com",
+          messagingSenderId: "249416500752",
+          appId: "1:249416500752:web:88d421c17752fd08e7ac95",
+          measurementId: "G-2SS309VMLB"
+        };
+        
+        const INVESTMENT_LEVELS = {
+            'freelance-1': { name: 'Freelance 1', investment: 4000, tasks: 8, amountPerTask: 16.25 }, 'freelance-2': { name: 'Freelance 2', investment: 10000, tasks: 8, amountPerTask: 37.5 }, 'freelance-3': { name: 'Freelance 3', investment: 25000, tasks: 6, amountPerTask: 133.3 }, 'freelance-4': { name: 'Freelance 4', investment: 50000, tasks: 6, amountPerTask: 266.67 }, 'manager-1': { name: 'Teamleader', investment: 100000, tasks: 4, amountPerTask: 825 }, 'manager-2': { name: 'Supervisor', investment: 200000, tasks: 3, amountPerTask: 2200 }, 'manager-3': { name: 'Manager', investment: 500000, tasks: 2, amountPerTask: 8300 }, 'None': { name: 'No Level', investment: 0, tasks: 0, amountPerTask: 0 }
+        };
+        const WITHDRAWAL_AMOUNTS = [200, 700, 1000, 1500, 2000, 3000, 5000, 10000];
+
+        let app, auth, db, currentUserData = null, unsubscribe = {}, taskTimerEndTime = null;
+        try { app = initializeApp(firebaseConfig); auth = getAuth(app); db = getFirestore(app); } catch (error) { console.error("Firebase init failed:", error); }
+       
+        const DOMElements = {
+            authContainer: document.getElementById('auth-container'), appContainer: document.getElementById('app-container'), errorMessage: document.getElementById('error-message'), loginTabBtn: document.getElementById('login-tab-btn'), signupTabBtn: document.getElementById('signup-tab-btn'), loginForm: document.getElementById('login-form'), signupForm: document.getElementById('signup-form'), logoutBtn: document.getElementById('logout-btn'), navItems: document.querySelectorAll('.nav-item'), pages: { home: document.getElementById('page-home'), work: document.getElementById('page-work'), profit: document.getElementById('page-profit'), my: document.getElementById('page-my'), notifications: document.getElementById('page-notifications') },
+            userNameDisplay: document.getElementById('user-name-display'), totalAssetsDisplay: document.getElementById('total-assets-display'), myUsername: document.getElementById('my-username'), myEmail: document.getElementById('my-email'), myUserid: document.getElementById('my-userid'), referralLinkInput: document.getElementById('referral-link-input'), copyReferralBtn: document.getElementById('copy-referral-btn'), workContent: document.getElementById('work-content'), taskFeedback: document.getElementById('task-feedback'), contractCountdownDisplay: document.getElementById('contract-countdown-display'), transactionLog: document.getElementById('transaction-log'), myTeamList: document.getElementById('my-team-list'), profitTasks: document.getElementById('profit-tasks'), profitReferrals: document.getElementById('profit-referrals'),
+            depositBtn: document.getElementById('deposit-btn'), depositModal: document.getElementById('deposit-modal'), closeModalBtn: document.getElementById('close-modal-btn'), completeTransactionBtn: document.getElementById('complete-transaction-btn'),
+            withdrawBtn: document.getElementById('withdraw-btn'), withdrawModal: document.getElementById('withdraw-modal'), withdrawStep1: document.getElementById('withdraw-step-1'), withdrawStep2: document.getElementById('withdraw-step-2'), withdrawOptions: document.getElementById('withdraw-options'), withdrawConfirmAmount: document.getElementById('withdraw-confirm-amount'), withdrawPhoneNumber: document.getElementById('withdraw-phone-number'), submitWithdrawalBtn: document.getElementById('submit-withdrawal-btn'), cancelWithdrawModalBtn: document.getElementById('cancel-withdraw-modal-btn'), backToWithdrawOptionsBtn: document.getElementById('back-to-withdraw-options-btn'),
+            notificationBtn: document.getElementById('notification-btn'), notificationDot: document.getElementById('notification-dot'), notificationsList: document.getElementById('notifications-list'),
+            messageModal: document.getElementById('message-modal'), messageModalText: document.getElementById('message-modal-text')
+        };
+
+        const showMessage = (text, isError = false) => { DOMElements.messageModalText.textContent = text; DOMElements.messageModal.classList.toggle('bg-red-500', isError); DOMElements.messageModal.classList.toggle('bg-green-500', !isError); DOMElements.messageModal.classList.remove('hidden'); setTimeout(() => DOMElements.messageModal.classList.add('hidden'), 3500); };
+        const switchAuthTab = (tab) => { DOMElements.errorMessage.textContent = ''; const isLogin = tab === 'login'; DOMElements.loginTabBtn.classList.toggle('border-orange-500', isLogin); DOMElements.loginTabBtn.classList.toggle('text-orange-500', isLogin); DOMElements.loginTabBtn.classList.toggle('text-gray-500', !isLogin); DOMElements.signupTabBtn.classList.toggle('border-orange-500', !isLogin); DOMElements.signupTabBtn.classList.toggle('text-orange-500', !isLogin); DOMElements.signupTabBtn.classList.toggle('text-gray-500', isLogin); DOMElements.loginForm.classList.toggle('hidden', !isLogin); DOMElements.signupForm.classList.toggle('hidden', isLogin); };
+        const switchPage = (pageName) => { Object.values(DOMElements.pages).forEach(p => p.classList.add('hidden')); if(DOMElements.pages[pageName]) DOMElements.pages[pageName].classList.remove('hidden'); DOMElements.navItems.forEach(item => item.classList.toggle('active', item.dataset.page === pageName)); if (pageName === 'profit') renderProfitPage(); if (pageName === 'my') renderMyTeam(); if (pageName === 'notifications') markNotificationsAsRead(); };
+
+        const listenToAllData = (user) => {
+            if (unsubscribe.user) unsubscribe.user();
+            unsubscribe.user = onSnapshot(doc(db, "users", user.uid), (docSnap) => { if (docSnap.exists()) { currentUserData = { id: docSnap.id, ...docSnap.data() }; checkAndResetTasks(user.uid, currentUserData); updateUI(currentUserData); } });
+            
+            if (unsubscribe.notifications) unsubscribe.notifications();
+            const q = query(collection(db, "notifications"), where("userId", "==", user.uid), orderBy("timestamp", "desc"));
+            unsubscribe.notifications = onSnapshot(q, (snapshot) => { renderNotifications(snapshot.docs); });
+        };
+        
+        const checkAndResetTasks = async (userId, userData) => {
+            const today = new Date().toISOString().split('T')[0];
+            if (userData.lastResetDate && today !== userData.lastResetDate) {
+                await updateDoc(doc(db, "users", userId), { tasksCompletedToday: 0, lastResetDate: today });
+            }
+        };
+
+        const renderNotifications = (docs) => {
+            DOMElements.notificationsList.innerHTML = '';
+            let hasUnread = false;
+            if (docs.empty) { DOMElements.notificationsList.innerHTML = '<p class="text-gray-500 text-center">No notifications yet.</p>'; } 
+            else {
+                docs.forEach(docSnap => {
+                    const n = docSnap.data();
+                    if (!n.isRead) hasUnread = true;
+                    const icon = n.type === 'approved' ? 'fa-check-circle text-green-500' : (n.type === 'rejected' ? 'fa-times-circle text-red-500' : 'fa-info-circle text-blue-500');
+                    DOMElements.notificationsList.innerHTML += `<div class="bg-white p-4 rounded-lg shadow-sm flex items-start space-x-4"><i class="fas ${icon} text-xl mt-1"></i><div><p class="font-semibold text-gray-800">${n.title}</p><p class="text-sm text-gray-600">${n.message}</p><p class="text-xs text-gray-400 mt-1">${n.timestamp.toDate().toLocaleString()}</p></div></div>`;
+                });
+            }
+            DOMElements.notificationDot.classList.toggle('active', hasUnread);
+        };
+        
+        const markNotificationsAsRead = async () => {
+            if (!auth.currentUser) return;
+            const q = query(collection(db, "notifications"), where("userId", "==", auth.currentUser.uid), where("isRead", "==", false));
+            const snapshot = await getDocs(q);
+            if (snapshot.empty) return;
+            const batch = writeBatch(db);
+            snapshot.docs.forEach(docSnap => batch.update(docSnap.ref, { isRead: true }));
+            await batch.commit();
+        };
+
+        const updateUI = (data) => { if (!data) return; DOMElements.userNameDisplay.textContent = data.username; DOMElements.totalAssetsDisplay.textContent = `Ksh ${data.totalAssets.toFixed(2)}`; DOMElements.myUsername.textContent = data.username; DOMElements.myEmail.textContent = data.email; DOMElements.myUserid.textContent = data.uid; DOMElements.referralLinkInput.value = `${window.location.origin}${window.location.pathname}?ref=${data.uid}`; renderWorkPage(data); if (data.contractEndDate?.toDate) { const diffDays = Math.ceil((data.contractEndDate.toDate() - new Date()) / (1000 * 60 * 60 * 24)); DOMElements.contractCountdownDisplay.textContent = `${diffDays > 0 ? diffDays : 0} Days Remaining`; } else { DOMElements.contractCountdownDisplay.textContent = 'No Active Contract'; } };
+        
+        const renderWorkPage = (data) => {
+            const levelKey = data.investmentLevel || 'None';
+            const levelInfo = INVESTMENT_LEVELS[levelKey];
+            if (!levelInfo || levelKey === 'None') { DOMElements.workContent.innerHTML = `<p class="text-gray-600">Your account is not active. Please make a deposit and contact the admin to activate an investment level.</p>`; return; }
+            if (data.tasksCompletedToday >= levelInfo.tasks) { DOMElements.workContent.innerHTML = `<p class="font-bold text-2xl text-green-500 my-4">All tasks completed for today!</p><p class="text-gray-600">Come back tomorrow.</p>`; return; }
+            
+            const isWorking = taskTimerEndTime && taskTimerEndTime > Date.now();
+            let buttonHTML;
+            if (isWorking) { buttonHTML = `<button id="work-button" class="w-full btn-disabled text-white font-bold py-4 px-4 rounded-lg text-xl" disabled>Working...</button>`; }
+            else if (taskTimerEndTime) { buttonHTML = `<button id="work-button" class="w-full bg-green-500 text-white font-bold py-4 px-4 rounded-lg hover:bg-green-600 shadow-lg text-xl">Complete Task</button>`; }
+            else { buttonHTML = `<button id="work-button" class="w-full bg-orange-500 text-white font-bold py-4 px-4 rounded-lg hover:bg-orange-600 shadow-lg text-xl">Start Working</button>`; }
+            DOMElements.workContent.innerHTML = `<p class="text-gray-600">Level: <span class="font-bold">${levelInfo.name}</span></p><p class="font-bold text-4xl text-orange-500 my-4">Task ${data.tasksCompletedToday + 1} of ${levelInfo.tasks}</p>${buttonHTML}`;
+            document.getElementById('work-button')?.addEventListener('click', handleWorkButtonClick);
+        };
+        
+        const handleWorkButtonClick = () => {
+            if (taskTimerEndTime && taskTimerEndTime > Date.now()) return; 
+            if (taskTimerEndTime) completeTask();
+            else startTaskTimer();
+        };
+
+        const startTaskTimer = () => {
+            const minDuration = 25 * 60 * 1000; // 25 minutes in ms
+            const maxDuration = 30 * 60 * 1000; // 30 minutes in ms
+            const taskDuration = Math.floor(Math.random() * (maxDuration - minDuration + 1)) + minDuration;
+            
+            taskTimerEndTime = Date.now() + taskDuration;
+            renderWorkPage(currentUserData); // Update button to "Working..."
+            
+            // Set a timeout to re-render the "Complete Task" button when the time is up
+            setTimeout(() => {
+                renderWorkPage(currentUserData);
+            }, taskDuration);
+        };
+        
+        const completeTask = async () => {
+            taskTimerEndTime = null;
+            const levelInfo = INVESTMENT_LEVELS[currentUserData.investmentLevel];
+            const earnings = levelInfo.amountPerTask;
+            const userRef = doc(db, "users", auth.currentUser.uid);
+            const batch = writeBatch(db);
+            
+            batch.update(userRef, { totalAssets: increment(earnings), tasksCompletedToday: increment(1), totalTaskProfit: increment(earnings) });
+            batch.set(doc(collection(db, "transactions")), { userId: auth.currentUser.uid, amount: earnings, type: 'task', timestamp: serverTimestamp() });
+            
+            if (currentUserData.referrerId) {
+                const bonus = earnings * 0.03;
+                const referrerRef = doc(db, "users", currentUserData.referrerId);
+                batch.update(referrerRef, { totalAssets: increment(bonus), totalReferralBonus: increment(bonus) });
+                batch.set(doc(collection(db, "transactions")), { userId: currentUserData.referrerId, amount: bonus, type: 'referral-3%', fromUser: currentUserData.username, timestamp: serverTimestamp() });
+            }
+            try {
+                await batch.commit();
+                DOMElements.taskFeedback.textContent = `Task completed! +Ksh ${earnings.toFixed(2)} added.`;
+                setTimeout(() => { DOMElements.taskFeedback.textContent = '' }, 3000);
+            } catch (error) { showMessage("Error completing task.", true); }
+        };
+
+        const renderMyTeam = async () => {
+            if (!auth.currentUser) return;
+            const q = query(collection(db, "users"), where("referrerId", "==", auth.currentUser.uid));
+            const querySnapshot = await getDocs(q);
+            DOMElements.myTeamList.innerHTML = '';
+            if (querySnapshot.empty) { DOMElements.myTeamList.innerHTML = '<p class="text-gray-500 text-center">No referrals yet. Share your link!</p>'; return; }
+            
+            let teamHTML = `<table class="min-w-full text-sm text-left">
+                <thead class="bg-gray-50"><tr>
+                    <th class="p-2 font-semibold text-gray-600">Username</th>
+                    <th class="p-2 font-semibold text-gray-600">Status</th>
+                    <th class="p-2 font-semibold text-gray-600">Level</th>
+                </tr></thead><tbody>`;
+
+            querySnapshot.forEach(docSnap => {
+                const member = docSnap.data();
+                const status = member.investmentLevel === 'None' ? 'Not Active' : 'Active';
+                const statusColor = status === 'Active' ? 'text-green-500' : 'text-yellow-500';
+                const levelName = INVESTMENT_LEVELS[member.investmentLevel]?.name || 'N/A';
+                teamHTML += `<tr class="border-t">
+                    <td class="p-2 font-semibold">${member.username}</td>
+                    <td class="p-2 font-bold ${statusColor}">${status}</td>
+                    <td class="p-2">${levelName}</td>
+                </tr>`;
+            });
+            teamHTML += `</tbody></table>`;
+            DOMElements.myTeamList.innerHTML = teamHTML;
+        };
+
+        const renderProfitPage = async () => {
+            DOMElements.profitTasks.textContent = `Ksh ${(currentUserData.totalTaskProfit || 0).toFixed(2)}`;
+            DOMElements.profitReferrals.textContent = `Ksh ${(currentUserData.totalReferralBonus || 0).toFixed(2)}`;
+            const q = query(collection(db, "transactions"), where("userId", "==", auth.currentUser.uid), orderBy("timestamp", "desc"));
+            const querySnapshot = await getDocs(q);
+            DOMElements.transactionLog.innerHTML = '';
+            if (querySnapshot.empty) { DOMElements.transactionLog.innerHTML = '<p class="text-gray-500 text-center">No transactions yet.</p>'; return; } 
+            querySnapshot.docs.forEach(docSnap => {
+                const t = docSnap.data(); let title, amountText, amountColor;
+                switch (t.type) {
+                    case 'deposit': title = `Activation Deposit`; amountText = `+ Ksh ${t.amount.toFixed(2)}`; amountColor = 'text-blue-600'; break;
+                    case 'task': title = 'Task Profit'; amountText = `+ Ksh ${t.amount.toFixed(2)}`; amountColor = 'text-green-600'; break;
+                    case 'withdrawal': title = `Withdrawal to ${t.phone}`; amountText = `- Ksh ${t.amount.toFixed(2)}`; amountColor = 'text-red-600'; break;
+                    case 'referral-3%': title = `Bonus from ${t.fromUser}`; amountText = `+ Ksh ${t.amount.toFixed(2)}`; amountColor = 'text-purple-600'; break;
+                    default: title = 'Transaction'; amountText = `Ksh ${t.amount.toFixed(2)}`; amountColor = 'text-gray-800';
+                }
+                DOMElements.transactionLog.innerHTML += `<div class="bg-white p-3 rounded-lg shadow-sm flex justify-between items-center"><div><p class="font-semibold">${title}</p><p class="text-xs text-gray-500">${t.timestamp.toDate().toLocaleString()}</p></div><p class="font-bold ${amountColor}">${amountText}</p></div>`;
+            });
+        };
+        
+        const openWithdrawModal = () => {
+            const lastWithdrawal = currentUserData.lastWithdrawalDate?.toDate();
+            if(lastWithdrawal) {
+                const nextAvailable = new Date(lastWithdrawal.getTime() + 7 * 24 * 60 * 60 * 1000);
+                if (new Date() < nextAvailable) {
+                    showMessage(`You can withdraw again on ${nextAvailable.toLocaleDateString()}.`, true);
+                    return;
+                }
+            }
+            DOMElements.withdrawOptions.innerHTML = '';
+            WITHDRAWAL_AMOUNTS.forEach(amount => {
+                const canAfford = currentUserData.totalAssets >= amount;
+                const button = document.createElement('button');
+                button.textContent = `Ksh ${amount}`;
+                button.dataset.amount = amount;
+                button.className = `p-3 rounded-lg font-semibold border-2 ${canAfford ? 'bg-orange-500 text-white border-orange-500' : 'bg-gray-200 text-gray-400 border-gray-200 cursor-not-allowed'}`;
+                if (canAfford) button.addEventListener('click', () => {
+                    DOMElements.withdrawStep1.classList.add('hidden');
+                    DOMElements.withdrawStep2.classList.remove('hidden');
+                    DOMElements.withdrawConfirmAmount.textContent = `Ksh ${amount}`;
+                    DOMElements.submitWithdrawalBtn.dataset.amount = amount;
+                });
+                DOMElements.withdrawOptions.appendChild(button);
+            });
+            DOMElements.withdrawModal.classList.remove('hidden');
+            DOMElements.withdrawStep1.classList.remove('hidden');
+            DOMElements.withdrawStep2.classList.add('hidden');
+        };
+        
+        const validatePassword = (password) => {
+            const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+            return regex.test(password);
+        };
+
+        // --- Event Listeners ---
+        DOMElements.loginForm.addEventListener('submit', async (e) => { e.preventDefault(); try { await signInWithEmailAndPassword(auth, DOMElements.loginForm['login-email'].value, DOMElements.loginForm['login-password'].value); } catch (error) { DOMElements.errorMessage.textContent = error.message.replace('Firebase: ', ''); } });
+        
+        DOMElements.signupForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            DOMElements.errorMessage.textContent = '';
+            const password = DOMElements.signupForm['signup-password'].value;
+            if (!validatePassword(password)) {
+                DOMElements.errorMessage.textContent = 'Password does not meet security requirements.';
+                return;
+            }
+            if (password !== DOMElements.signupForm['signup-confirm-password'].value) {
+                DOMElements.errorMessage.textContent = "Passwords do not match.";
+                return;
+            }
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, DOMElements.signupForm['signup-email'].value, password);
+                const userRef = doc(db, "users", userCredential.user.uid);
+                const urlParams = new URLSearchParams(window.location.search);
+                await setDoc(userRef, { uid: userCredential.user.uid, username: DOMElements.signupForm['signup-username'].value, email: userCredential.user.email, createdAt: serverTimestamp(), investmentLevel: 'None', totalAssets: 0, totalTaskProfit: 0, totalReferralBonus: 0, contractEndDate: null, referrerId: urlParams.get('ref') || null, lastResetDate: new Date().toISOString().split('T')[0], tasksCompletedToday: 0 });
+            } catch (error) {
+                DOMElements.errorMessage.textContent = error.message.replace('Firebase: ', '');
+            }
+        });
+        
+        DOMElements.logoutBtn.addEventListener('click', () => { if (confirm("Are you sure?")) signOut(auth); });
+        DOMElements.copyReferralBtn.addEventListener('click', () => { DOMElements.referralLinkInput.select(); document.execCommand('copy'); showMessage('Referral link copied!'); });
+        DOMElements.depositBtn.addEventListener('click', () => DOMElements.depositModal.classList.remove('hidden'));
+        DOMElements.closeModalBtn.addEventListener('click', () => DOMElements.depositModal.classList.add('hidden'));
+        DOMElements.completeTransactionBtn.addEventListener('click', async () => { try { await addDoc(collection(db, 'admin_notifications'), { userId: auth.currentUser.uid, username: currentUserData.username, type: 'deposit_paid', message: `${currentUserData.username} has reported making a deposit.`, timestamp: serverTimestamp(), status: 'pending' }); showMessage('Admin has been notified.'); DOMElements.depositModal.classList.add('hidden'); } catch (e) { showMessage('Could not notify admin.', true); } });
+        DOMElements.withdrawBtn.addEventListener('click', openWithdrawModal);
+        DOMElements.cancelWithdrawModalBtn.addEventListener('click', () => DOMElements.withdrawModal.classList.add('hidden'));
+        DOMElements.backToWithdrawOptionsBtn.addEventListener('click', () => { DOMElements.withdrawStep1.classList.remove('hidden'); DOMElements.withdrawStep2.classList.add('hidden'); });
+        DOMElements.notificationBtn.addEventListener('click', () => switchPage('notifications'));
+        DOMElements.navItems.forEach(item => item.addEventListener('click', () => switchPage(item.dataset.page)));
+        DOMElements.loginTabBtn.addEventListener('click', () => switchAuthTab('login'));
+        DOMElements.signupTabBtn.addEventListener('click', () => switchAuthTab('signup'));
+        
+        DOMElements.submitWithdrawalBtn.addEventListener('click', async (e) => {
+            const amount = parseFloat(e.target.dataset.amount);
+            const phone = DOMElements.withdrawPhoneNumber.value.trim();
+            if (!/^(07|01)\d{8}$/.test(phone)) { showMessage('Please enter a valid M-Pesa number (e.g., 0712345678).', true); return; }
+            if(isNaN(amount) || amount <= 0 || amount > currentUserData.totalAssets) { showMessage('Invalid withdrawal amount.', true); return; }
+            try {
+                const userRef = doc(db, "users", auth.currentUser.uid);
+                await updateDoc(userRef, { totalAssets: increment(-amount), lastWithdrawalDate: serverTimestamp() });
+                await addDoc(collection(db, 'admin_notifications'), { userId: auth.currentUser.uid, username: currentUserData.username, type: 'withdrawal_request', amount, phone, timestamp: serverTimestamp() });
+                await addDoc(collection(db, 'transactions'), { userId: auth.currentUser.uid, amount, phone, type: 'withdrawal', timestamp: serverTimestamp() });
+                showMessage('Withdrawal request sent!');
+                DOMElements.withdrawModal.classList.add('hidden');
+                DOMElements.withdrawPhoneNumber.value = '';
+            } catch(err) { showMessage('Request failed. Please try again.', true); console.error(err); }
+        });
+        
+        onAuthStateChanged(auth, user => {
+            if (user) { DOMElements.authContainer.classList.add('hidden'); DOMElements.appContainer.style.display = 'flex'; listenToAllData(user); switchPage('home'); } 
+            else { DOMElements.authContainer.classList.remove('hidden'); DOMElements.appContainer.style.display = 'none'; Object.values(unsubscribe).forEach(unsub => unsub()); currentUserData = null; }
+        });
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden && auth.currentUser) {
+                signOut(auth);
+            }
+        });
+
+        switchAuthTab('login'); 
+    </script>
+</body>
+</html>
