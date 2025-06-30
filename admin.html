@@ -6,12 +6,12 @@
     <title>BMF - Admin Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/heroicons/2.1.3/24/outline/hero-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         body { font-family: 'Inter', sans-serif; }
         .sidebar-link { display: flex; align-items: center; padding: 0.75rem 1rem; border-radius: 0.5rem; transition: background-color 0.2s; cursor: pointer; }
         .sidebar-link:hover, .sidebar-link.active { background-color: #4a5568; }
-        .sidebar-link svg { width: 1.5rem; height: 1.5rem; margin-right: 0.75rem; }
+        .sidebar-link .fa-fw { width: 1.25em; text-align: center; margin-right: 0.75rem; }
         .content-section { display: none; }
         .content-section.active { display: block; }
         .stat-card { background-color: white; border-radius: 0.75rem; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); }
@@ -25,14 +25,8 @@
             <h1 class="text-3xl font-bold text-center text-orange-500 mb-6">BMF Admin Login</h1>
             <div id="admin-error-message" class="mb-4 text-center text-red-500 font-medium h-5"></div>
             <form id="admin-login-form">
-                <div class="mb-4">
-                    <label for="admin-email" class="block text-sm font-medium text-gray-700">Admin Email</label>
-                    <input type="email" id="admin-email" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500">
-                </div>
-                <div class="mb-6">
-                    <label for="admin-password" class="block text-sm font-medium text-gray-700">Admin Password</label>
-                    <input type="password" id="admin-password" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500">
-                </div>
+                <div class="mb-4"><label for="admin-email" class="block text-sm font-medium text-gray-700">Admin Email</label><input type="email" id="admin-email" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"></div>
+                <div class="mb-6"><label for="admin-password" class="block text-sm font-medium text-gray-700">Admin Password</label><input type="password" id="admin-password" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"></div>
                 <button type="submit" class="w-full bg-orange-500 text-white font-bold py-3 px-4 rounded-lg hover:bg-orange-600 transition duration-300 shadow-lg">Login</button>
             </form>
         </div>
@@ -44,13 +38,14 @@
                 <div>
                     <h2 class="text-2xl font-bold text-center text-orange-500 mb-8 border-b border-gray-700 pb-4">BMF ADMIN</h2>
                     <ul class="space-y-3">
-                        <li><div class="sidebar-link active" data-target="overview"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h7.5" /></svg>Overview</div></li>
-                        <li class="relative"><div class="sidebar-link" data-target="deposits"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>Deposit Requests</div><div id="deposits-badge" class="notification-badge hidden">0</div></li>
-                        <li class="relative"><div class="sidebar-link" data-target="withdrawals"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>Withdrawal Requests</div><div id="withdrawals-badge" class="notification-badge hidden">0</div></li>
-                        <li><div class="sidebar-link" data-target="users"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.003c0 1.113.285 2.16.786 3.07m-6.136-7.854a4.125 4.125 0 11-7.533-2.493 4.125 4.125 0 017.533 2.493zM3.513 12.343a4.125 4.125 0 117.533 2.493m-7.533-2.493c0 1.113.285 2.16.786 3.07" /></svg>Manage Users</div></li>
+                        <li><div class="sidebar-link active" data-target="overview"><i class="fas fa-fw fa-tachometer-alt"></i>Overview</div></li>
+                        <li class="relative"><div class="sidebar-link" data-target="deposits"><i class="fas fa-fw fa-download"></i>Deposit Requests</div><div id="deposits-badge" class="notification-badge hidden">0</div></li>
+                        <li class="relative"><div class="sidebar-link" data-target="withdrawals"><i class="fas fa-fw fa-upload"></i>Withdrawal Requests</div><div id="withdrawals-badge" class="notification-badge hidden">0</div></li>
+                        <li><div class="sidebar-link" data-target="users"><i class="fas fa-fw fa-users"></i>Manage Users</div></li>
+                        <li><div class="sidebar-link" data-target="notifications"><i class="fas fa-fw fa-paper-plane"></i>Send Notifications</div></li>
                     </ul>
                 </div>
-                <button id="admin-logout-btn" class="sidebar-link w-full text-red-400 hover:bg-red-800/50"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" /></svg>Logout</button>
+                <button id="admin-logout-btn" class="sidebar-link w-full text-red-400 hover:bg-red-800/50"><i class="fas fa-fw fa-sign-out-alt"></i>Logout</button>
             </nav>
 
             <main class="flex-1 p-6 md:p-10 bg-gray-100 overflow-y-auto">
@@ -59,46 +54,77 @@
                 <div id="deposits-section" class="content-section"><div id="deposits-list" class="space-y-4 bg-white p-4 rounded-lg shadow"></div></div>
                 <div id="withdrawals-section" class="content-section"><div id="withdrawals-list" class="space-y-4 bg-white p-4 rounded-lg shadow"></div></div>
                 <div id="users-section" class="content-section"><div id="users-list" class="space-y-4 bg-white p-4 rounded-lg shadow max-h-[75vh] overflow-y-auto"></div></div>
+                <div id="notifications-section" class="content-section">
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-4">Send a Notification</h2>
+                        <div class="space-y-4">
+                            <div><label for="notification-user" class="block text-sm font-medium text-gray-700">Target User (Optional, leave blank for all)</label><input type="text" id="notification-user-id" placeholder="Enter User ID" class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm"></div>
+                            <div><label for="notification-title" class="block text-sm font-medium text-gray-700">Title</label><input type="text" id="notification-title" class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm"></div>
+                            <div><label for="notification-message" class="block text-sm font-medium text-gray-700">Message</label><textarea id="notification-message" rows="4" class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm"></textarea></div>
+                            <div class="flex space-x-2">
+                                <button id="send-notification-btn" class="w-full bg-orange-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-orange-600">Send Notification</button>
+                                <button id="send-welcome-btn" class="w-full bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600">Send Welcome</button>
+                                <button id="send-reminder-btn" class="w-full bg-yellow-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-yellow-600">Send 2nd Withdraw Rule</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </main>
         </div>
     </div>
     
-    <div id="user-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-40 p-4"><div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md text-gray-800"><h3 class="font-bold text-xl mb-4" id="modal-username">User Details</h3><div class="space-y-4"><div><label for="modal-level-select" class="block text-sm font-medium text-gray-700">Set/Update Investment Level</label><select id="modal-level-select" class="mt-1 block w-full px-3 py-2 bg-slate-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"></select></div><div><label for="modal-assets-input" class="block text-sm font-medium text-gray-700">Edit Total Assets (Ksh)</label><input type="number" id="modal-assets-input" class="mt-1 block w-full px-3 py-2 bg-slate-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"></div><div><label for="modal-bonus-select" class="block text-sm font-medium text-gray-700">Add 5% Referral Bonus to Sponsor?</label><select id="modal-bonus-select" class="mt-1 block w-full px-3 py-2 bg-slate-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"><option value="no">No</option><option value="yes">Yes</option></select><p class="text-xs text-slate-500 mt-1">Updating the level will also (re)start a 180-day contract.</p></div></div><div class="mt-6 flex justify-end space-x-3"><button id="close-user-modal-btn" class="bg-slate-200 text-slate-700 font-bold py-2 px-4 rounded-lg hover:bg-slate-300">Close</button><button id="update-user-btn" class="bg-orange-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-orange-600">Update User</button></div></div></div>
+    <div id="user-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-40 p-4"><div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg text-gray-800 overflow-y-auto max-h-screen"><h3 class="font-bold text-xl mb-4" id="modal-username">User Details</h3><div class="space-y-4"><div><label class="block text-sm font-medium text-gray-700">Set/Update Investment Level</label><select id="modal-level-select" class="mt-1 block w-full px-3 py-2 bg-slate-50 border rounded-md"></select></div><div class="grid grid-cols-2 gap-4"><div><label class="block text-sm font-medium text-gray-700">Total Task Profits (Ksh)</label><input type="number" id="modal-task-profit" class="mt-1 block w-full px-3 py-2 bg-slate-50 border rounded-md"></div><div><label class="block text-sm font-medium text-gray-700">Total Referral Bonuses (Ksh)</label><input type="number" id="modal-referral-bonus" class="mt-1 block w-full px-3 py-2 bg-slate-50 border rounded-md"></div></div><div class="bg-gray-100 p-3 rounded-lg"><h4 class="font-semibold text-gray-700 mb-2">Referral Report</h4><div id="referral-report" class="text-sm space-y-1"></div></div></div><div class="mt-6 flex justify-end space-x-3"><button id="close-user-modal-btn" class="bg-slate-200 text-slate-700 font-bold py-2 px-4 rounded-lg hover:bg-slate-300">Close</button><button id="update-user-btn" class="bg-orange-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-orange-600">Update User</button></div></div></div>
     <div id="message-modal" class="hidden fixed top-5 right-5 bg-green-500 text-white py-2 px-4 rounded-lg shadow-xl z-50 animate-pulse"><p id="message-modal-text"></p></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, doc, updateDoc, onSnapshot, query, orderBy, getDoc, deleteDoc, increment, addDoc, serverTimestamp, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, updateDoc, onSnapshot, query, orderBy, getDocs, deleteDoc, increment, addDoc, serverTimestamp, writeBatch, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         document.addEventListener("DOMContentLoaded", () => {
             const firebaseConfig = { apiKey: "AIzaSyAwf6foE2lZcv90wnQIRXguq-Z7jkIX8r8", authDomain: "bmf-6447b.firebaseapp.com", projectId: "bmf-6447b", storageBucket: "bmf-6447b.appspot.com", messagingSenderId: "249416500752", appId: "1:249416500752:web:88d421c17752fd08e7ac95", measurementId: "G-2SS309VMLB" };
             const ADMIN_EMAIL = 'cleophasamutete@gmail.com';
             const INVESTMENT_LEVELS = { 'freelance-1': { name: 'Freelance 1', investment: 4000 }, 'freelance-2': { name: 'Freelance 2', investment: 10000 }, 'freelance-3': { name: 'Freelance 3', investment: 25000 }, 'freelance-4': { name: 'Freelance 4', investment: 50000 }, 'manager-1': { name: 'Teamleader', investment: 100000 }, 'manager-2': { name: 'Supervisor', investment: 200000 }, 'manager-3': { name: 'Manager', investment: 500000 },'None': { name: 'None', investment: 0 }};
-            
-            let app, auth, db, selectedUserId = null, selectedNotifDocId = null;
-            try { app = initializeApp(firebaseConfig); auth = getAuth(app); db = getFirestore(app); } 
-            catch (e) { console.error("Firebase init failed:", e); }
+            let app, auth, db, selectedUserId = null;
+            try { app = initializeApp(firebaseConfig); auth = getAuth(app); db = getFirestore(app); } catch (e) { console.error("Firebase init failed:", e); }
 
             const DOMElements = {
-                loginContainer: document.getElementById('admin-login-container'), panelContainer: document.getElementById('admin-panel-container'),
-                loginForm: document.getElementById('admin-login-form'), errorMessage: document.getElementById('admin-error-message'), logoutBtn: document.getElementById('admin-logout-btn'),
-                navItems: document.querySelectorAll('.sidebar-link'), pages: { overview: document.getElementById('overview-section'), users: document.getElementById('users-section'), deposits: document.getElementById('deposits-section'), withdrawals: document.getElementById('withdrawals-section'), },
+                loginContainer: document.getElementById('admin-login-container'), panelContainer: document.getElementById('admin-panel-container'), loginForm: document.getElementById('admin-login-form'), errorMessage: document.getElementById('admin-error-message'), logoutBtn: document.getElementById('admin-logout-btn'),
+                navItems: document.querySelectorAll('.sidebar-link'), pages: { overview: document.getElementById('overview-section'), users: document.getElementById('users-section'), deposits: document.getElementById('deposits-section'), withdrawals: document.getElementById('withdrawals-section'), notifications: document.getElementById('notifications-section') },
                 depositsList: document.getElementById('deposits-list'), withdrawalsList: document.getElementById('withdrawals-list'), usersList: document.getElementById('users-list'),
-                userModal: document.getElementById('user-modal'), modalUsername: document.getElementById('modal-username'), modalLevelSelect: document.getElementById('modal-level-select'), modalAssetsInput: document.getElementById('modal-assets-input'), modalBonusSelect: document.getElementById('modal-bonus-select'),
+                userModal: document.getElementById('user-modal'), modalUsername: document.getElementById('modal-username'), modalLevelSelect: document.getElementById('modal-level-select'), modalTaskProfit: document.getElementById('modal-task-profit'), modalReferralBonus: document.getElementById('modal-referral-bonus'), referralReport: document.getElementById('referral-report'),
                 updateUserBtn: document.getElementById('update-user-btn'), closeModalBtn: document.getElementById('close-user-modal-btn'),
                 pageTitle: document.getElementById('page-title'), statTotalUsers: document.getElementById('total-users-stat'), statTotalAssets: document.getElementById('total-assets-stat'), statPendingDeposits: document.getElementById('pending-deposits-stat'), statPendingWithdrawals: document.getElementById('pending-withdrawals-stat'),
-                depositsBadge: document.getElementById('deposits-badge'), withdrawalsBadge: document.getElementById('withdrawals-badge'), messageModal: document.getElementById('message-modal'), messageModalText: document.getElementById('message-modal-text')
+                depositsBadge: document.getElementById('deposits-badge'), withdrawalsBadge: document.getElementById('withdrawals-badge'),
+                notificationUserId: document.getElementById('notification-user-id'), notificationTitle: document.getElementById('notification-title'), notificationMessage: document.getElementById('notification-message'), sendNotificationBtn: document.getElementById('send-notification-btn'), sendWelcomeBtn: document.getElementById('send-welcome-btn'), sendReminderBtn: document.getElementById('send-reminder-btn'),
+                messageModal: document.getElementById('message-modal'), messageModalText: document.getElementById('message-modal-text')
             };
 
             const showMessage = (text, isError = false) => { DOMElements.messageModalText.textContent = text; DOMElements.messageModal.classList.toggle('bg-red-500', isError); DOMElements.messageModal.classList.toggle('bg-green-500', !isError); DOMElements.messageModal.classList.remove('hidden'); setTimeout(() => DOMElements.messageModal.classList.add('hidden'), 3500); };
             const updateBadge = (badge, count) => { badge.textContent = count; badge.classList.toggle('hidden', count === 0); };
             const formatCurrency = (amount) => `Ksh ${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-            const openUserModal = (user) => { selectedUserId = user.uid; DOMElements.modalUsername.textContent = `Manage: ${user.username}`; DOMElements.modalLevelSelect.value = user.investmentLevel || 'None'; DOMElements.modalAssetsInput.value = user.totalAssets; DOMElements.modalBonusSelect.value = 'no'; DOMElements.userModal.classList.remove('hidden'); };
             const populateLevelSelect = () => { DOMElements.modalLevelSelect.innerHTML = Object.keys(INVESTMENT_LEVELS).map(key => `<option value="${key}">${INVESTMENT_LEVELS[key].name}</option>`).join(''); };
             
-            const loadAllData = () => { listenForNotifications(); listenForUsers(); };
-            
+            const openUserModal = async (user) => {
+                selectedUserId = user.uid;
+                DOMElements.modalUsername.textContent = `Manage: ${user.username}`;
+                DOMElements.modalLevelSelect.value = user.investmentLevel || 'None';
+                DOMElements.modalTaskProfit.value = user.totalTaskProfit || 0;
+                DOMElements.modalReferralBonus.value = user.totalReferralBonus || 0;
+                DOMElements.userModal.classList.remove('hidden');
+                
+                // Generate Referral Report
+                DOMElements.referralReport.innerHTML = `<p>Loading report...</p>`;
+                const q = query(collection(db, 'users'), where("referrerId", "==", user.uid));
+                const snapshot = await getDocs(q);
+                const referrals = snapshot.docs.map(doc => doc.data());
+                const activeReferrals = referrals.filter(r => r.investmentLevel !== 'None').length;
+                DOMElements.referralReport.innerHTML = `
+                    <p><strong>Total Referrals:</strong> ${referrals.length}</p>
+                    <p><strong>Active Referrals:</strong> ${activeReferrals}</p>
+                    <p><strong>Dormant Referrals:</strong> ${referrals.length - activeReferrals}</p>`;
+            };
+
             const listenForNotifications = () => {
                 const q = query(collection(db, 'admin_notifications'), orderBy('timestamp', 'desc'));
                 onSnapshot(q, (snapshot) => {
@@ -106,14 +132,22 @@
                     DOMElements.withdrawalsList.innerHTML = '<p class="text-gray-500 p-4 text-center">No new withdrawal requests.</p>';
                     let depositCount = 0, withdrawalCount = 0, hasDeposits = false, hasWithdrawals = false;
                     snapshot.forEach(docSnap => {
-                        const notif = docSnap.data(); const el = document.createElement('div'); el.className = 'border p-3 rounded-lg shadow-sm';
+                        const notif = docSnap.data(); const el = document.createElement('div'); el.className = 'border p-3 rounded-lg shadow-sm bg-white text-gray-800';
                         if (notif.type === 'deposit_paid') {
-                            if (!hasDeposits) DOMElements.depositsList.innerHTML = '';
-                            el.innerHTML = `<div><p><span class="font-semibold">${notif.username}</span> reported a deposit.</p><p class="text-xs text-gray-500">${notif.timestamp.toDate().toLocaleString()}</p></div><button data-uid="${notif.userId}" data-uname="${notif.username}" data-docid="${docSnap.id}" class="activate-user-btn mt-2 bg-blue-500 text-white text-sm font-semibold py-1 px-3 rounded hover:bg-blue-600">Activate User</button>`;
+                           if (!hasDeposits) DOMElements.depositsList.innerHTML = '';
+                            el.innerHTML = `<div><p><span class="font-semibold">${notif.username}</span> reported a deposit.</p><p class="text-xs text-gray-500">User ID: ${notif.userId}</p><p class="text-xs text-gray-500">${notif.timestamp.toDate().toLocaleString()}</p></div><button data-uid="${notif.userId}" data-uname="${notif.username}" data-docid="${docSnap.id}" class="activate-user-btn mt-2 bg-blue-500 text-white text-sm font-semibold py-1 px-3 rounded hover:bg-blue-600">Activate User</button>`;
                             DOMElements.depositsList.appendChild(el); depositCount++; hasDeposits = true;
                         } else if (notif.type === 'withdrawal_request') {
-                            if (!hasWithdrawals) DOMElements.withdrawalsList.innerHTML = '';
-                            el.innerHTML = `<div><p><span class="font-semibold">${notif.username}</span> requests <span class="font-bold">${formatCurrency(notif.amount)}</span>.</p><p class="text-xs text-gray-500">${notif.timestamp.toDate().toLocaleString()}</p></div><div class="flex space-x-2 mt-2"><button data-uid="${notif.userId}" data-amount="${notif.amount}" data-docid="${docSnap.id}" class="approve-withdrawal-btn flex-1 bg-green-500 text-white text-sm font-semibold py-1 px-3 rounded hover:bg-green-600">Approve</button><button data-uid="${notif.userId}" data-amount="${notif.amount}" data-docid="${docSnap.id}" class="reject-withdrawal-btn flex-1 bg-yellow-500 text-white text-sm font-semibold py-1 px-3 rounded hover:bg-yellow-600">Reject</button></div>`;
+                           if (!hasWithdrawals) DOMElements.withdrawalsList.innerHTML = '';
+                            el.innerHTML = `<div>
+                                <p><span class="font-semibold">${notif.username}</span> requests <span class="font-bold">${formatCurrency(notif.amount)}</span>.</p>
+                                <p class="text-sm text-blue-600 font-semibold">M-Pesa No: ${notif.phone}</p>
+                                <p class="text-xs text-gray-500">User ID: ${notif.userId}</p>
+                                <p class="text-xs text-gray-500">${notif.timestamp.toDate().toLocaleString()}</p>
+                                </div><div class="flex space-x-2 mt-2">
+                                <button data-uid="${notif.userId}" data-amount="${notif.amount}" data-docid="${docSnap.id}" class="approve-withdrawal-btn flex-1 bg-green-500 text-white text-sm font-semibold py-1 px-3 rounded hover:bg-green-600">Approve</button>
+                                <button data-uid="${notif.userId}" data-amount="${notif.amount}" data-docid="${docSnap.id}" class="reject-withdrawal-btn flex-1 bg-yellow-500 text-white text-sm font-semibold py-1 px-3 rounded hover:bg-yellow-600">Reject</button>
+                                </div>`;
                             DOMElements.withdrawalsList.appendChild(el); withdrawalCount++; hasWithdrawals = true;
                         }
                     });
@@ -121,6 +155,7 @@
                     DOMElements.statPendingDeposits.textContent = depositCount; DOMElements.statPendingWithdrawals.textContent = withdrawalCount;
                 });
             };
+            
             const listenForUsers = () => {
                 const q = query(collection(db, 'users'), orderBy('createdAt', 'desc'));
                 onSnapshot(q, (snapshot) => {
@@ -128,69 +163,87 @@
                     if (snapshot.empty) { DOMElements.statTotalUsers.textContent = 0; DOMElements.statTotalAssets.textContent = formatCurrency(0); return; }
                     DOMElements.usersList.innerHTML = ''; let totalAssets = 0;
                     snapshot.forEach(docSnap => {
-                        const user = {...docSnap.data(), uid: docSnap.id}; const el = document.createElement('div'); el.className = 'border p-3 rounded-lg shadow-sm';
-                        let daysRemaining = 'N/A', contractStatus = user.investmentLevel === 'None' ? 'Inactive' : `Level: ${INVESTMENT_LEVELS[user.investmentLevel]?.name || 'Unknown'}`;
-                        if(user.contractEndDate?.toDate){ const diffDays = Math.ceil((user.contractEndDate.toDate() - new Date()) / (1000 * 60 * 60 * 24)); daysRemaining = diffDays > 0 ? `${diffDays} days` : 'Expired'; }
-                        el.innerHTML = `<div class="flex justify-between items-start"><div><p class="font-bold">${user.username} <span class="text-sm font-medium text-gray-600">(${user.email})</span></p><p class="text-sm text-green-700 font-semibold">Assets: ${formatCurrency(user.totalAssets)}</p><p class="text-xs text-gray-500">${contractStatus} | Contract Ends: <span class="font-medium">${daysRemaining}</span></p></div><div class="flex flex-col space-y-2"><button data-user='${JSON.stringify(user)}' class="manage-user-btn bg-gray-600 text-white text-xs font-semibold py-1 px-3 rounded hover:bg-gray-700">Manage</button><button data-uid="${user.uid}" data-uname="${user.username}" class="delete-user-btn bg-red-600 text-white text-xs font-semibold py-1 px-3 rounded hover:bg-red-700">Delete</button></div></div>`;
+                        const user = {...docSnap.data(), uid: docSnap.id}; const el = document.createElement('div'); el.className = 'border p-3 rounded-lg shadow-sm bg-white text-gray-800';
+                        el.innerHTML = `<div class="flex justify-between items-start"><div><p class="font-bold">${user.username} <span class="text-sm font-medium text-gray-600">(${user.email})</span></p><p class="text-sm text-green-700 font-semibold">Assets: ${formatCurrency(user.totalAssets || 0)}</p><p class="text-xs text-gray-500">Level: <span class="font-medium">${INVESTMENT_LEVELS[user.investmentLevel]?.name || 'N/A'}</span></p></div><div class="flex flex-col space-y-2"><button data-user='${JSON.stringify(user)}' class="manage-user-btn bg-gray-600 text-white text-xs font-semibold py-1 px-3 rounded hover:bg-gray-700">Manage</button><button data-uid="${user.uid}" data-uname="${user.username}" class="delete-user-btn bg-red-600 text-white text-xs font-semibold py-1 px-3 rounded hover:bg-red-700">Delete</button></div></div>`;
                         DOMElements.usersList.appendChild(el); totalAssets += user.totalAssets || 0;
                     });
                     DOMElements.statTotalUsers.textContent = snapshot.size; DOMElements.statTotalAssets.textContent = formatCurrency(totalAssets);
                 });
             };
 
+            const sendNotification = async (userId, title, message, type) => {
+                try {
+                    const payload = { title, message, type, timestamp: serverTimestamp(), isRead: false };
+                    if (userId) { // Single user
+                        payload.userId = userId;
+                        await addDoc(collection(db, "notifications"), payload);
+                    } else { // All users
+                        const usersSnapshot = await getDocs(collection(db, "users"));
+                        const batch = writeBatch(db);
+                        usersSnapshot.forEach(userDoc => {
+                            const notifRef = doc(collection(db, "notifications"));
+                            batch.set(notifRef, { ...payload, userId: userDoc.id });
+                        });
+                        await batch.commit();
+                    }
+                    showMessage(`Notification sent successfully!`);
+                    DOMElements.notificationTitle.value = '';
+                    DOMElements.notificationMessage.value = '';
+                    DOMElements.notificationUserId.value = '';
+                } catch (err) { showMessage("Error sending notification: " + err.message, true); }
+            };
+
             // --- Event Listeners ---
-            onAuthStateChanged(auth, user => { DOMElements.loginContainer.style.display = 'none'; DOMElements.panelContainer.classList.add('hidden'); if (user && user.email.toLowerCase() === ADMIN_EMAIL) { DOMElements.panelContainer.classList.remove('hidden'); populateLevelSelect(); loadAllData(); } else { DOMElements.loginContainer.style.display = 'flex'; if (user) signOut(auth); } });
+            onAuthStateChanged(auth, user => { DOMElements.loginContainer.style.display = 'none'; DOMElements.panelContainer.classList.add('hidden'); if (user && user.email.toLowerCase() === ADMIN_EMAIL) { DOMElements.panelContainer.classList.remove('hidden'); populateLevelSelect(); listenForNotifications(); listenForUsers(); } else { DOMElements.loginContainer.style.display = 'flex'; if (user) signOut(auth); } });
             DOMElements.loginForm.addEventListener('submit', async e => { e.preventDefault(); const email = DOMElements.loginForm['admin-email'].value; DOMElements.errorMessage.textContent = ''; if (email.toLowerCase() !== ADMIN_EMAIL) { DOMElements.errorMessage.textContent = "Unauthorized email."; return; } try { await signInWithEmailAndPassword(auth, email, DOMElements.loginForm['admin-password'].value); } catch (e) { DOMElements.errorMessage.textContent = e.message; } });
             DOMElements.logoutBtn.addEventListener('click', () => signOut(auth));
             
             document.addEventListener('click', async e => {
-                if (e.target.classList.contains('manage-user-btn')) { openUserModal(JSON.parse(e.target.dataset.user)); }
-                if (e.target.classList.contains('activate-user-btn')) { selectedNotifDocId = e.target.dataset.docid; openUserModal({uid: e.target.dataset.uid, username: e.target.dataset.uname, totalAssets: 0, investmentLevel: 'None'}); showMessage("Set user's level to activate their account.", false); }
-                if (e.target.classList.contains('approve-withdrawal-btn')) { if (!confirm("Are you sure you have sent the money? This will approve the request.")) return; try { await deleteDoc(doc(db, 'admin_notifications', e.target.dataset.docid)); showMessage("Withdrawal approved."); } catch (err) { showMessage("Error: " + err.message, true); } }
-                if (e.target.classList.contains('reject-withdrawal-btn')) { if (!confirm("Reject this withdrawal? Funds will be returned to the user.")) return; try { const userRef = doc(db, 'users', e.target.dataset.uid); await updateDoc(userRef, { totalAssets: increment(parseFloat(e.target.dataset.amount)) }); await deleteDoc(doc(db, 'admin_notifications', e.target.dataset.docid)); showMessage("Withdrawal rejected and funds returned."); } catch (err) { showMessage("Error: " + err.message, true); } }
-                if (e.target.classList.contains('delete-user-btn')) { const uname = e.target.dataset.uname; if (!confirm(`DANGER: Permanently delete user data for "${uname}"? This cannot be undone. You must also delete their login from the Firebase Authentication console.`)) return; try { await deleteDoc(doc(db, "users", e.target.dataset.uid)); showMessage(`User data for "${uname}" has been deleted.`); } catch (err) { showMessage("Error deleting user data: " + err.message, true); } }
+                if (e.target.classList.contains('manage-user-btn')) openUserModal(JSON.parse(e.target.dataset.user));
+                if (e.target.classList.contains('activate-user-btn')) { showMessage("Opening manager... Set user's level and profits to activate account.", false); openUserModal({uid: e.target.dataset.uid, username: e.target.dataset.uname, totalAssets: 0, investmentLevel: 'None'}); }
+                
+                if (e.target.classList.contains('approve-withdrawal-btn')) { 
+                    if (!confirm("Have you sent the money? This approves the request and notifies the user.")) return;
+                    try {
+                        await deleteDoc(doc(db, 'admin_notifications', e.target.dataset.docid));
+                        await sendNotification(e.target.dataset.uid, 'Withdrawal Approved', `Your withdrawal request of ${formatCurrency(parseFloat(e.target.dataset.amount))} has been approved and processed.`, 'approved');
+                        showMessage("Withdrawal approved.");
+                    } catch (err) { showMessage("Error: " + err.message, true); }
+                }
+                if (e.target.classList.contains('reject-withdrawal-btn')) {
+                    if (!confirm("Reject this withdrawal? Funds will be returned and user will be notified.")) return;
+                    try {
+                        const batch = writeBatch(db);
+                        const userRef = doc(db, 'users', e.target.dataset.uid);
+                        batch.update(userRef, { totalAssets: increment(parseFloat(e.target.dataset.amount)), lastWithdrawalDate: null }); // Return funds and reset date
+                        batch.delete(doc(db, 'admin_notifications', e.target.dataset.docid));
+                        await batch.commit();
+                        await sendNotification(e.target.dataset.uid, 'Withdrawal Rejected', `Your withdrawal request of ${formatCurrency(parseFloat(e.target.dataset.amount))} was rejected. The funds have been returned to your account.`, 'rejected');
+                        showMessage("Withdrawal rejected and funds returned.");
+                    } catch (err) { showMessage("Error: " + err.message, true); }
+                }
+                if (e.target.classList.contains('delete-user-btn')) { const uname = e.target.dataset.uname; if (!confirm(`DANGER: Permanently delete user data for "${uname}"? This cannot be undone.`)) return; try { await deleteDoc(doc(db, "users", e.target.dataset.uid)); showMessage(`User data for "${uname}" has been deleted.`); } catch (err) { showMessage("Error deleting user data: " + err.message, true); } }
             });
             
-            DOMElements.closeModalBtn.addEventListener('click', () => { DOMElements.userModal.classList.add('hidden'); selectedNotifDocId = null; });
+            DOMElements.closeModalBtn.addEventListener('click', () => DOMElements.userModal.classList.add('hidden'));
             DOMElements.updateUserBtn.addEventListener('click', async () => {
                 if (!selectedUserId) return;
                 const newLevel = DOMElements.modalLevelSelect.value;
-                const newAssets = parseFloat(DOMElements.modalAssetsInput.value);
-                const giveBonus = DOMElements.modalBonusSelect.value === 'yes';
-                if (isNaN(newAssets)) { showMessage("Invalid assets amount.", true); return; }
-
+                const newTaskProfit = parseFloat(DOMElements.modalTaskProfit.value);
+                const newReferralBonus = parseFloat(DOMElements.modalReferralBonus.value);
+                if (isNaN(newTaskProfit) || isNaN(newReferralBonus)) { showMessage("Invalid profit/bonus amount.", true); return; }
                 const userRef = doc(db, 'users', selectedUserId);
                 try {
-                    const userDoc = await getDoc(userRef);
-                    const userData = userDoc.data();
-                    const batch = writeBatch(db);
-                    const updatePayload = { investmentLevel: newLevel, totalAssets: newAssets };
-
-                    if (newLevel !== 'None' && userData.investmentLevel === 'None') {
-                        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-                        updatePayload.activationDay = days[new Date().getDay()];
-                        updatePayload.contractEndDate = new Date(new Date().setDate(new Date().getDate() + 180));
-                        updatePayload.lastWithdrawalDate = null;
-                    }
-                    batch.update(userRef, updatePayload);
-                    if (selectedNotifDocId) { batch.delete(doc(db, 'admin_notifications', selectedNotifDocId)); }
-                    
-                    if (giveBonus && userData.referrerId) {
-                        const levelInfo = INVESTMENT_LEVELS[newLevel];
-                        if (levelInfo?.investment > 0) {
-                            const bonusAmount = levelInfo.investment * 0.05;
-                            batch.update(doc(db, "users", userData.referrerId), { totalAssets: increment(bonusAmount) });
-                            batch.set(doc(collection(db, "transactions")), { userId: userData.referrerId, amount: bonusAmount, type: 'referral-5%', fromUser: userData.username, timestamp: serverTimestamp() });
-                        }
-                    }
-                    
-                    await batch.commit();
+                    const updatePayload = { investmentLevel: newLevel, totalTaskProfit: newTaskProfit, totalReferralBonus: newReferralBonus };
+                    await updateDoc(userRef, updatePayload);
                     showMessage('User updated successfully!');
                     DOMElements.userModal.classList.add('hidden');
-                    selectedUserId = null;
-                    selectedNotifDocId = null;
                 } catch (err) { showMessage("Error: " + err.message, true); }
             });
+            
+            DOMElements.sendNotificationBtn.addEventListener('click', () => { const title = DOMElements.notificationTitle.value; const msg = DOMElements.notificationMessage.value; if (!title || !msg) { showMessage("Title and message are required.", true); return; } sendNotification(DOMElements.notificationUserId.value.trim() || null, title, msg, 'info'); });
+            DOMElements.sendWelcomeBtn.addEventListener('click', () => { const title = 'Welcome to BMF!'; const msg = "We're thrilled to have you in the community. Your account is set up. To begin your earning journey, please make a deposit and contact us for activation. We wish you the best!"; sendNotification(DOMElements.notificationUserId.value.trim() || null, title, msg, 'info'); });
+            DOMElements.sendReminderBtn.addEventListener('click', () => { const title = 'Withdrawal Requirement'; const msg = 'Congratulations on your progress! To unlock your second and all future withdrawals, our policy requires you to have at least two successfully referred members who have activated their accounts. This helps our community grow. Thank you!'; sendNotification(DOMElements.notificationUserId.value.trim() || null, title, msg, 'info'); });
 
             DOMElements.navItems.forEach(link => { link.addEventListener('click', (e) => { e.preventDefault(); const targetId = link.dataset.target; if (!targetId) return; document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active')); link.classList.add('active'); document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active')); document.getElementById(`${targetId}-section`).classList.add('active'); DOMElements.pageTitle.textContent = targetId.charAt(0).toUpperCase() + targetId.slice(1); }); });
         });
