@@ -274,25 +274,43 @@
             if (countdownInterval) { clearInterval(countdownInterval); countdownInterval = null; }
             taskTimerEndTime = null;
             localStorage.removeItem('taskTimerEndTime');
+            
             const levelInfo = INVESTMENT_LEVELS[currentUserData.investmentLevel];
+            if (!levelInfo) {
+                showMessage("Cannot find investment level details.", true);
+                return;
+            }
+            
             const earnings = levelInfo.amountPerTask;
             const userRef = doc(db, "users", auth.currentUser.uid);
             const batch = writeBatch(db);
             
-            batch.update(userRef, { totalAssets: increment(earnings), tasksCompletedToday: increment(1), totalTaskProfit: increment(earnings) });
-            batch.set(doc(collection(db, "transactions")), { userId: auth.currentUser.uid, amount: earnings, type: 'task', timestamp: serverTimestamp() });
+            // Update current user's data
+            batch.update(userRef, { 
+                totalAssets: increment(earnings), 
+                tasksCompletedToday: increment(1), 
+                totalTaskProfit: increment(earnings) 
+            });
             
-            if (currentUserData.referrerId) {
-                const bonus = earnings * 0.03;
-                const referrerRef = doc(db, "users", currentUserData.referrerId);
-                batch.update(referrerRef, { totalAssets: increment(bonus), totalReferralBonus: increment(bonus) });
-                batch.set(doc(collection(db, "transactions")), { userId: currentUserData.referrerId, amount: bonus, type: 'referral-3%', fromUser: currentUserData.username, timestamp: serverTimestamp() });
-            }
+            // Create a transaction log for the current user
+            batch.set(doc(collection(db, "transactions")), { 
+                userId: auth.currentUser.uid, 
+                amount: earnings, 
+                type: 'task', 
+                timestamp: serverTimestamp() 
+            });
+            
+            // The referrer bonus logic has been removed from here because it violates
+            // security rules. It should be handled by a secure backend function.
+
             try {
                 await batch.commit();
                 DOMElements.taskFeedback.textContent = `Task completed! +Ksh ${earnings.toFixed(2)} added.`;
                 setTimeout(() => { DOMElements.taskFeedback.textContent = '' }, 3000);
-            } catch (error) { showMessage("Error completing task.", true); }
+            } catch (error) { 
+                console.error("Error committing task batch:", error);
+                showMessage("Error completing task.", true); 
+            }
         };
 
         const renderMyTeam = async () => {
