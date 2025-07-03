@@ -7,7 +7,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <!-- PDF & Charting Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
@@ -26,7 +25,6 @@
 </head>
 <body class="bg-gray-100">
 
-    <!-- Admin Login Section -->
     <div id="admin-login-container" class="min-h-screen flex items-center justify-center bg-gray-200 p-4">
         <div class="w-full max-w-sm bg-white rounded-2xl shadow-xl p-8">
             <h1 class="text-3xl font-bold text-center text-orange-500 mb-6">BMF Admin Login</h1>
@@ -39,10 +37,8 @@
         </div>
     </div>
 
-    <!-- Admin Panel -->
     <div id="admin-panel-container" class="hidden">
         <div class="flex h-screen bg-gray-800 text-white">
-            <!-- Sidebar -->
             <nav class="w-64 flex-shrink-0 bg-slate-900 p-4 flex flex-col justify-between">
                 <div>
                     <h2 class="text-2xl font-bold text-center text-orange-500 mb-8 border-b border-gray-700 pb-4">BMF ADMIN</h2>
@@ -57,7 +53,6 @@
                 <button id="admin-logout-btn" class="sidebar-link w-full text-red-400 hover:bg-red-800/50"><i class="fas fa-fw fa-sign-out-alt"></i>Logout</button>
             </nav>
 
-            <!-- Main Content -->
             <main class="flex-1 p-6 md:p-10 bg-gray-100 overflow-y-auto">
                 <header class="mb-8"><h1 id="page-title" class="text-4xl font-bold text-gray-800">Overview</h1></header>
                 <div id="overview-section" class="content-section active"><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"><div class="stat-card"><h3 class="text-gray-500 font-semibold">Total Users</h3><p id="total-users-stat" class="text-3xl font-bold text-gray-800">0</p></div><div class="stat-card"><h3 class="text-gray-500 font-semibold">Total Platform Assets</h3><p id="total-assets-stat" class="text-3xl font-bold text-gray-800">Ksh 0.00</p></div><div class="stat-card"><h3 class="text-gray-500 font-semibold">Pending Deposits</h3><p id="pending-deposits-stat" class="text-3xl font-bold text-orange-500">0</p></div><div class="stat-card"><h3 class="text-gray-500 font-semibold">Pending Withdrawals</h3><p id="pending-withdrawals-stat" class="text-3xl font-bold text-orange-500">0</p></div></div></div>
@@ -83,7 +78,6 @@
         </div>
     </div>
     
-    <!-- Manage User Details Modal -->
     <div id="user-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-40 p-4">
         <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg text-gray-800 overflow-y-auto max-h-screen">
             <h3 class="font-bold text-xl mb-4" id="modal-username">User Details</h3>
@@ -101,7 +95,6 @@
         </div>
     </div>
     
-    <!-- Manage Assets Modal -->
     <div id="asset-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-40 p-4">
         <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg text-gray-800">
             <h3 class="font-bold text-xl mb-4" id="asset-modal-username">Manage Assets</h3>
@@ -113,7 +106,6 @@
         </div>
     </div>
     
-    <!-- User Report Modal -->
     <div id="report-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
         <div class="bg-gray-50 rounded-xl shadow-2xl p-6 w-full max-w-4xl text-gray-800 max-h-[95vh] flex flex-col">
             <div class="flex justify-between items-center mb-4 border-b pb-3">
@@ -148,7 +140,7 @@
                 navItems: document.querySelectorAll('.sidebar-link'), pageTitle: document.getElementById('page-title'),
                 statTotalUsers: document.getElementById('total-users-stat'), statTotalAssets: document.getElementById('total-assets-stat'), statPendingDeposits: document.getElementById('pending-deposits-stat'), statPendingWithdrawals: document.getElementById('pending-withdrawals-stat'),
                 depositsBadge: document.getElementById('deposits-badge'), withdrawalsBadge: document.getElementById('withdrawals-badge'),
-                depositsList: document.getElementById('deposits-list'), usersList: document.getElementById('users-list'),
+                depositsList: document.getElementById('deposits-list'), withdrawalsList: document.getElementById('withdrawals-list'), usersList: document.getElementById('users-list'),
                 userModal: document.getElementById('user-modal'), modalUsername: document.getElementById('modal-username'), modalLevelSelect: document.getElementById('modal-level-select'), modalTaskProfit: document.getElementById('modal-task-profit'), modalReferralBonus: document.getElementById('modal-referral-bonus'), updateUserBtn: document.getElementById('update-user-btn'), closeUserModalBtn: document.getElementById('close-user-modal-btn'),
                 assetModal: document.getElementById('asset-modal'), assetModalUsername: document.getElementById('asset-modal-username'), modalTotalAssets: document.getElementById('modal-total-assets'), sponsorInfo: document.getElementById('sponsor-info'), addBonusBtn: document.getElementById('add-bonus-btn'), updateAssetsBtn: document.getElementById('update-assets-btn'), closeAssetModalBtn: document.getElementById('close-asset-modal-btn'),
                 reportModal: document.getElementById('report-modal'), reportModalUsername: document.getElementById('report-modal-username'), reportContent: document.getElementById('report-content'), closeReportModalBtn: document.getElementById('close-report-modal-btn'), downloadPdfBtn: document.getElementById('download-pdf-btn'),
@@ -205,6 +197,35 @@
                 } catch (err) { showMessage(`Error: ${err.message}`, true); }
             };
             
+            // --- NEW/RESTORED: Withdrawal Request Logic ---
+            const handleWithdrawalRequest = async (action, userId, docId, username, amount) => {
+                if (!confirm(`Are you sure you want to ${action} this KES ${amount} withdrawal for ${username}?`)) return;
+                try {
+                    const numericAmount = parseFloat(amount);
+                    if (action === 'approve') {
+                        // Create a transaction record for the user
+                        await addDoc(collection(db, 'transactions'), {
+                            userId: userId,
+                            type: 'withdrawal_approved',
+                            amount: numericAmount,
+                            description: `Withdrawal of ${formatCurrency(numericAmount)} approved and processed.`,
+                            timestamp: serverTimestamp()
+                        });
+                        await handleSendNotification(username, 'Withdrawal Approved', `Your withdrawal request for ${formatCurrency(numericAmount)} has been approved and is being processed.`, 'success');
+                        showMessage(`Withdrawal for ${username} approved.`);
+                    } else if (action === 'reject') {
+                        // Return the funds to the user's account and notify them
+                        await updateDoc(doc(db, 'users', userId), { totalAssets: increment(numericAmount) });
+                        await handleSendNotification(username, 'Withdrawal Rejected', `Your withdrawal request for ${formatCurrency(numericAmount)} was rejected. The funds have been returned to your account. Please contact support for details.`, 'rejected');
+                        showMessage(`Withdrawal for ${username} rejected.`);
+                    }
+                    // Delete the admin notification regardless of action
+                    await deleteDoc(doc(db, 'admin_notifications', docId));
+                } catch (err) {
+                    showMessage(`Error processing withdrawal: ${err.message}`, true);
+                }
+            };
+
             // --- User Report & PDF Generation ---
             const openReportModal = async (user) => {
                 selectedUserData = user;
@@ -289,6 +310,25 @@
                         el.innerHTML = `<div><p><span class="font-semibold">${notif.username}</span> reported a deposit.</p><p class="text-xs text-gray-500">User ID: ${notif.userId}</p></div><div class="flex space-x-2 mt-2"><button data-action="activate" data-uid="${notif.userId}" data-uname="${notif.username}" data-docid="${docSnap.id}" class="deposit-action-btn flex-1 bg-blue-500 text-white text-xs font-semibold py-1 px-3 rounded hover:bg-blue-600">Activate</button><button data-action="reject" data-uid="${notif.userId}" data-uname="${notif.username}" data-docid="${docSnap.id}" class="deposit-action-btn flex-1 bg-yellow-500 text-white text-xs font-semibold py-1 px-3 rounded hover:bg-yellow-600">Reject</button><button data-action="delete" data-uid="${notif.userId}" data-uname="${notif.username}" data-docid="${docSnap.id}" class="deposit-action-btn flex-1 bg-red-600 text-white text-xs font-semibold py-1 px-3 rounded hover:bg-red-700">Delete</button></div>`;
                         DOMElements.depositsList.appendChild(el);
                     });
+                    
+                    // --- MODIFIED/RESTORED: Display Withdrawal Requests ---
+                    DOMElements.withdrawalsList.innerHTML = withdrawals.length > 0 ? '' : '<p class="text-gray-500 p-4 text-center">No new withdrawal requests.</p>';
+                    withdrawals.forEach(docSnap => {
+                        const notif = docSnap.data();
+                        const el = document.createElement('div');
+                        el.className = 'border p-3 rounded-lg shadow-sm bg-white text-gray-800';
+                        el.innerHTML = `
+                            <div>
+                                <p><span class="font-semibold">${notif.username}</span> requested a withdrawal of <span class="font-bold text-orange-600">${formatCurrency(notif.amount)}</span>.</p>
+                                <p class="text-xs text-gray-500">Phone: ${notif.phone || 'N/A'}</p>
+                                <p class="text-xs text-gray-500">User ID: ${notif.userId}</p>
+                            </div>
+                            <div class="flex space-x-2 mt-2">
+                                <button data-action="approve" data-uid="${notif.userId}" data-uname="${notif.username}" data-docid="${docSnap.id}" data-amount="${notif.amount}" class="withdrawal-action-btn flex-1 bg-green-500 text-white text-xs font-semibold py-1 px-3 rounded hover:bg-green-600">Approve</button>
+                                <button data-action="reject" data-uid="${notif.userId}" data-uname="${notif.username}" data-docid="${docSnap.id}" data-amount="${notif.amount}" class="withdrawal-action-btn flex-1 bg-red-600 text-white text-xs font-semibold py-1 px-3 rounded hover:bg-red-700">Reject</button>
+                            </div>`;
+                        DOMElements.withdrawalsList.appendChild(el);
+                    });
                 });
             };
             
@@ -343,7 +383,7 @@
             });
             DOMElements.logoutBtn.addEventListener('click', () => signOut(auth));
             
-            // --- Event Delegation ---
+            // --- Event Delegation (MODIFIED) ---
             document.addEventListener('click', async e => {
                 const target = e.target.closest('button');
                 if (!target) return;
@@ -351,6 +391,8 @@
 
                 if (btnClassList.contains('deposit-action-btn')) {
                     handleDepositRequest(target.dataset.action, target.dataset.uid, target.dataset.docid, target.dataset.uname);
+                } else if (btnClassList.contains('withdrawal-action-btn')) { // <-- ADDED THIS BLOCK
+                    handleWithdrawalRequest(target.dataset.action, target.dataset.uid, target.dataset.docid, target.dataset.uname, target.dataset.amount);
                 } else if (btnClassList.contains('manage-details-btn')) {
                     openUserModal(JSON.parse(target.dataset.user));
                 } else if (btnClassList.contains('view-report-btn')) {
