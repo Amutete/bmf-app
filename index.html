@@ -140,7 +140,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot, updateDoc, increment, collection, addDoc, query, where, getDocs, serverTimestamp, orderBy, writeBatch, arrayUnion } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, onSnapshot, updateDoc, increment, collection, addDoc, query, where, getDocs, serverTimestamp, orderBy, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
           apiKey: "AIzaSyAwf6foE2lZcv90wnQIRXguq-Z7jkIX8r8",
@@ -285,27 +285,23 @@
             const userRef = doc(db, "users", auth.currentUser.uid);
             const batch = writeBatch(db);
             
+            // Update current user's data
             batch.update(userRef, { 
                 totalAssets: increment(earnings), 
                 tasksCompletedToday: increment(1), 
                 totalTaskProfit: increment(earnings) 
             });
             
+            // Create a transaction log for the current user
             batch.set(doc(collection(db, "transactions")), { 
                 userId: auth.currentUser.uid, 
                 amount: earnings, 
                 type: 'task', 
                 timestamp: serverTimestamp() 
             });
-
-            const today = new Date().toISOString().split('T')[0];
-            const dailyEarningsRef = doc(db, `users/${auth.currentUser.uid}/daily_earnings/${today}`);
-            batch.set(dailyEarningsRef, {
-                date: today,
-                taskProfit: increment(earnings),
-                totalProfit: increment(earnings),
-                timestamps: arrayUnion(serverTimestamp())
-            }, { merge: true });
+            
+            // The referrer bonus logic has been removed from here because it violates
+            // security rules. It should be handled by a secure backend function.
 
             try {
                 await batch.commit();
@@ -353,60 +349,36 @@
             if (!currentUserData) return;
             DOMElements.profitTasks.textContent = `Ksh ${(currentUserData.totalTaskProfit || 0).toFixed(2)}`;
             DOMElements.profitReferrals.textContent = `Ksh ${(currentUserData.totalReferralBonus || 0).toFixed(2)}`;
-
             const q = query(collection(db, "transactions"), where("userId", "==", auth.currentUser.uid), orderBy("timestamp", "desc"));
             const querySnapshot = await getDocs(q);
             DOMElements.transactionLog.innerHTML = '';
-
-            if (querySnapshot.empty) {
-                DOMElements.transactionLog.innerHTML = '<p class="text-gray-500 text-center mt-4">No transactions yet.</p>';
-            } else {
-                DOMElements.transactionLog.innerHTML += `<h4 class="font-bold text-xl text-gray-700 mb-2">Recent Transactions</h4>`;
-                querySnapshot.docs.forEach(docSnap => {
-                    const t = docSnap.data();
-                    let title, amountText, amountColor, icon;
-                    switch (t.type) {
-                        case 'deposit': title = `Activation Deposit`; amountText = `+ Ksh ${t.amount.toFixed(2)}`; amountColor = 'text-blue-600'; icon = 'fa-arrow-down'; break;
-                        case 'task': title = 'Task Profit'; amountText = `+ Ksh ${t.amount.toFixed(2)}`; amountColor = 'text-green-600'; icon = 'fa-check'; break;
-                        case 'withdrawal': title = `Withdrawal to ${t.phone}`; amountText = `- Ksh ${t.amount.toFixed(2)}`; amountColor = 'text-red-600'; icon = 'fa-arrow-up'; break;
-                        case 'referral-3%': title = `Bonus from ${t.fromUser}`; amountText = `+ Ksh ${t.amount.toFixed(2)}`; amountColor = 'text-purple-600'; icon = 'fa-users'; break;
-                        default: title = 'Transaction'; amountText = `Ksh ${t.amount.toFixed(2)}`; amountColor = 'text-gray-800'; icon = 'fa-exchange-alt';
-                    }
-                    DOMElements.transactionLog.innerHTML += `
-                        <div class="bg-white p-3 rounded-lg shadow-sm flex items-center space-x-4">
-                            <div class="w-10 h-10 rounded-full flex items-center justify-center ${amountColor.replace('text-', 'bg-').replace('-600', '-100')}"><i class="fas ${icon} ${amountColor}"></i></div>
-                            <div class="flex-grow"><p class="font-semibold">${title}</p><p class="text-xs text-gray-500">${t.timestamp.toDate().toLocaleString()}</p></div>
-                            <p class="font-bold ${amountColor}">${amountText}</p>
-                        </div>`;
-                });
-            }
-            
-            const earningsSnap = await getDocs(query(collection(db, `users/${auth.currentUser.uid}/daily_earnings`), orderBy("date", "desc")));
-            if (!earningsSnap.empty) {
-                DOMElements.transactionLog.innerHTML += `<h4 class="font-bold text-xl text-gray-700 mt-6 mb-2">Daily Earnings History</h4>`;
-                earningsSnap.forEach(docSnap => {
-                    const e = docSnap.data();
-                    const date = e.date || "Unknown Date";
-                    const taskEarnings = (e.taskProfit || 0).toFixed(2);
-                    const referralEarnings = (e.referralProfit || 0).toFixed(2);
-                    const total = (e.totalProfit || 0).toFixed(2);
-                    let taskTimes = '';
-                    if (Array.isArray(e.timestamps)) {
-                        taskTimes = e.timestamps.map(ts => ts.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })).join(', ');
-                    }
-                    DOMElements.transactionLog.innerHTML += `
-                        <div class="bg-gray-50 p-3 rounded-lg shadow-sm mb-2">
-                            <div class="flex justify-between items-center">
-                                <div>
-                                    <p class="font-semibold text-gray-800">${date}</p>
-                                    <p class="text-sm text-gray-500">Tasks: Ksh ${taskEarnings} | Referrals: Ksh ${referralEarnings}</p>
-                                </div>
-                                <p class="font-bold text-orange-500">+Ksh ${total}</p>
-                            </div>
-                            ${taskTimes ? `<p class="text-xs text-gray-400 mt-2">Task Times: ${taskTimes}</p>` : ''}
-                        </div>`;
-                });
-            }
+            if (querySnapshot.empty) { DOMElements.transactionLog.innerHTML = '<p class="text-gray-500 text-center">No transactions yet.</p>'; return; } 
+            querySnapshot.docs.forEach(docSnap => {
+                const t = docSnap.data(); let title, amountText, amountColor, icon;
+                switch (t.type) {
+                    case 'deposit': 
+                        title = `Activation Deposit`; amountText = `+ Ksh ${t.amount.toFixed(2)}`; amountColor = 'text-blue-600'; icon = 'fa-arrow-down'; break;
+                    case 'task': 
+                        title = 'Task Profit'; amountText = `+ Ksh ${t.amount.toFixed(2)}`; amountColor = 'text-green-600'; icon = 'fa-check'; break;
+                    case 'withdrawal': 
+                        title = `Withdrawal to ${t.phone}`; amountText = `- Ksh ${t.amount.toFixed(2)}`; amountColor = 'text-red-600'; icon = 'fa-arrow-up'; break;
+                    case 'referral-3%': 
+                        title = `Bonus from ${t.fromUser}`; amountText = `+ Ksh ${t.amount.toFixed(2)}`; amountColor = 'text-purple-600'; icon = 'fa-users'; break;
+                    default: 
+                        title = 'Transaction'; amountText = `Ksh ${t.amount.toFixed(2)}`; amountColor = 'text-gray-800'; icon = 'fa-exchange-alt';
+                }
+                DOMElements.transactionLog.innerHTML += `
+                    <div class="bg-white p-3 rounded-lg shadow-sm flex items-center space-x-4">
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center ${amountColor.replace('text-', 'bg-').replace('-600', '-100')}">
+                           <i class="fas ${icon} ${amountColor}"></i>
+                        </div>
+                        <div class="flex-grow">
+                            <p class="font-semibold">${title}</p>
+                            <p class="text-xs text-gray-500">${t.timestamp.toDate().toLocaleString()}</p>
+                        </div>
+                        <p class="font-bold ${amountColor}">${amountText}</p>
+                    </div>`;
+            });
         };
         
         const openWithdrawModal = () => {
@@ -443,6 +415,7 @@
             return regex.test(password);
         };
 
+        // --- Event Listeners ---
         DOMElements.loginForm.addEventListener('submit', async (e) => { e.preventDefault(); try { await signInWithEmailAndPassword(auth, DOMElements.loginForm['login-email'].value, DOMElements.loginForm['login-password'].value); } catch (error) { DOMElements.errorMessage.textContent = error.message.replace('Firebase: ', ''); } });
         
         DOMElements.signupForm.addEventListener('submit', async (e) => {
@@ -517,7 +490,7 @@
                 }
 
                 canAutoLogout = false;
-                setTimeout(() => { canAutoLogout = true; }, 120000);
+                setTimeout(() => { canAutoLogout = true; }, 120000); // 2 minute (120,000 ms) grace period
             } 
             else { 
                 if (countdownInterval) { clearInterval(countdownInterval); countdownInterval = null; }
