@@ -96,14 +96,14 @@
                     <div class="bg-gray-100 p-4 rounded-xl text-center"><p class="font-semibold text-gray-600">Total Task Profits</p><p id="profit-tasks" class="font-bold text-2xl text-gray-800">Ksh 0.00</p></div>
                     <div class="bg-gray-100 p-4 rounded-xl text-center"><p class="font-semibold text-gray-600">Total Referral Bonuses</p><p id="profit-referrals" class="font-bold text-2xl text-gray-800">Ksh 0.00</p></div>
                 </div>
-                <h4 class="font-bold text-xl text-gray-700 mb-2">Transaction Log</h4>
-                <div id="transaction-log" class="space-y-3"></div>
+                <h4 class="font-bold text-xl text-gray-700 mb-2">Transaction History</h4>
+                <div id="transaction-log" class="space-y-4"></div>
             </div>
             <div id="page-my" class="hidden">
                 <h3 class="font-bold text-2xl text-gray-800 mb-6">My Profile</h3>
                 <div class="bg-white p-4 rounded-lg shadow mb-6"><h4 class="font-bold text-lg text-gray-700 mb-3">Personal Details</h4><div class="space-y-2 text-sm"><p><span class="font-semibold">Username:</span> <span id="my-username"></span></p><p><span class="font-semibold">Email:</span> <span id="my-email"></span></p><p><span class="font-semibold">User ID:</span> <span id="my-userid" class="text-xs text-gray-500"></span></p></div></div>
                 <div class="bg-white p-4 rounded-lg shadow mb-6"><h4 class="font-bold text-lg text-gray-700 mb-3">My Referral Link</h4><div class="bg-gray-100 p-2 rounded-md flex items-center justify-between"><input id="referral-link-input" type="text" readonly value="Loading..." class="bg-transparent text-gray-600 text-xs w-full focus:outline-none"><button id="copy-referral-btn" class="bg-orange-500 text-white px-3 py-1 rounded text-sm font-semibold">Copy</button></div></div>
-                <div class="bg-white p-4 rounded-lg shadow mb-6"><h4 class="font-bold text-lg text-gray-700 mb-3">My Team</h4><div id="my-team-list" class="space-y-3"></div></div>
+                <div class="bg-white p-4 rounded-lg shadow mb-6"><h4 class="font-bold text-lg text-gray-700 mb-3">My Team</h4><div id="my-team-list" class="space-y-4"></div></div>
                 <button id="logout-btn" class="w-full bg-red-500 text-white font-bold py-3 px-4 rounded-lg hover:bg-red-600 transition duration-300 shadow-lg">Logout</button>
             </div>
              <div id="page-notifications" class="hidden">
@@ -313,31 +313,64 @@
             }
         };
 
+        // --- NEW AND IMPROVED "MY TEAM" RENDERER ---
         const renderMyTeam = async () => {
             if (!auth.currentUser) return;
+            // Query for users who have the current user's ID as their referrerId
             const q = query(collection(db, "users"), where("referrerId", "==", auth.currentUser.uid), orderBy("createdAt", "desc"));
             const querySnapshot = await getDocs(q);
-            DOMElements.myTeamList.innerHTML = '';
-            if (querySnapshot.empty) { DOMElements.myTeamList.innerHTML = '<p class="text-gray-500 text-center">No referrals yet. Share your link!</p>'; return; }
+
+            DOMElements.myTeamList.innerHTML = ''; // Clear the list before rendering
+            if (querySnapshot.empty) {
+                DOMElements.myTeamList.innerHTML = '<p class="text-gray-500 text-center p-4">You have not referred anyone yet. Share your link to build your team!</p>';
+                return;
+            }
             
             querySnapshot.forEach(docSnap => {
                 const member = docSnap.data();
-                const status = member.investmentLevel === 'None' ? 'Not Active' : 'Active';
-                const statusColor = status === 'Active' ? 'text-green-500' : 'text-yellow-500';
-                const levelName = INVESTMENT_LEVELS[member.investmentLevel]?.name || 'N/A';
-                const joinDate = member.createdAt?.toDate().toLocaleDateString() || 'Unknown';
-                const totalEarnings = (member.totalTaskProfit || 0) + (member.totalReferralBonus || 0);
+                const levelKey = member.investmentLevel || 'None';
+                const levelInfo = INVESTMENT_LEVELS[levelKey];
 
+                // Determine account status and activation date
+                const isActivated = member.activatedAt && member.investmentLevel !== 'None';
+                const status = isActivated ? 'Active' : 'Dormant';
+                const statusColor = isActivated ? 'bg-green-500' : 'bg-yellow-500';
+                const activatedDate = isActivated ? member.activatedAt.toDate().toLocaleDateString() : 'N/A';
+                
+                // Get registration date
+                const joinDate = member.createdAt?.toDate().toLocaleDateString() || 'Unknown';
+
+                // Calculate potential daily earnings
+                const dailyEarning = levelInfo ? (levelInfo.tasks * levelInfo.amountPerTask) : 0;
+
+                // Create the new, detailed card for each team member
                 const memberCard = `
-                    <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
-                        <div class="flex justify-between items-center mb-2">
-                            <p class="font-bold text-lg text-gray-800">${member.username}</p>
-                            <p class="font-semibold text-sm ${statusColor}">${status}</p>
+                    <div class="bg-white p-4 rounded-xl shadow-md border border-gray-200 space-y-3">
+                        <div class="flex justify-between items-start">
+                            <h5 class="font-bold text-lg text-gray-900">${member.username}</h5>
+                            <div class="flex items-center space-x-2">
+                                <span class="text-xs font-semibold text-gray-600">${status}</span>
+                                <div class="w-3 h-3 rounded-full ${statusColor}"></div>
+                            </div>
                         </div>
-                        <div class="text-sm text-gray-600 space-y-1">
-                            <p><strong>Level:</strong> ${levelName}</p>
-                            <p><strong>Joined:</strong> ${joinDate}</p>
-                            <p><strong>Lifetime Earnings:</strong> Ksh ${totalEarnings.toFixed(2)}</p>
+                        
+                        <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm text-gray-700 border-t pt-3">
+                            <div>
+                                <p class="font-semibold">Level:</p>
+                                <p>${levelInfo.name}</p>
+                            </div>
+                            <div>
+                                <p class="font-semibold">Daily Potential:</p>
+                                <p>Ksh ${dailyEarning.toFixed(2)}</p>
+                            </div>
+                            <div>
+                                <p class="font-semibold">Date Joined:</p>
+                                <p>${joinDate}</p>
+                            </div>
+                            <div>
+                                <p class="font-semibold">Date Activated:</p>
+                                <p>${activatedDate}</p>
+                            </div>
                         </div>
                     </div>
                 `;
@@ -345,40 +378,117 @@
             });
         };
 
+        // --- NEW AND IMPROVED PROFIT PAGE RENDERER ---
         const renderProfitPage = async () => {
             if (!currentUserData) return;
+
+            // Update the lifetime total cards at the top of the page
             DOMElements.profitTasks.textContent = `Ksh ${(currentUserData.totalTaskProfit || 0).toFixed(2)}`;
             DOMElements.profitReferrals.textContent = `Ksh ${(currentUserData.totalReferralBonus || 0).toFixed(2)}`;
-            const q = query(collection(db, "transactions"), where("userId", "==", auth.currentUser.uid), orderBy("timestamp", "desc"));
+            
+            // Fetch all transaction types for the current user
+            const q = query(
+                collection(db, "transactions"), 
+                where("userId", "==", auth.currentUser.uid), 
+                orderBy("timestamp", "desc")
+            );
             const querySnapshot = await getDocs(q);
-            DOMElements.transactionLog.innerHTML = '';
-            if (querySnapshot.empty) { DOMElements.transactionLog.innerHTML = '<p class="text-gray-500 text-center">No transactions yet.</p>'; return; } 
+
+            DOMElements.transactionLog.innerHTML = ''; // Clear previous logs
+            if (querySnapshot.empty) {
+                DOMElements.transactionLog.innerHTML = '<p class="text-gray-500 text-center">No transactions have been recorded yet.</p>';
+                return;
+            }
+
+            // This object will hold all transactions grouped by date, e.g., { "2025-07-04": { ... } }
+            const groupedTransactions = {};
+
             querySnapshot.docs.forEach(docSnap => {
-                const t = docSnap.data(); let title, amountText, amountColor, icon;
-                switch (t.type) {
-                    case 'deposit': 
-                        title = `Activation Deposit`; amountText = `+ Ksh ${t.amount.toFixed(2)}`; amountColor = 'text-blue-600'; icon = 'fa-arrow-down'; break;
-                    case 'task': 
-                        title = 'Task Profit'; amountText = `+ Ksh ${t.amount.toFixed(2)}`; amountColor = 'text-green-600'; icon = 'fa-check'; break;
-                    case 'withdrawal': 
-                        title = `Withdrawal to ${t.phone}`; amountText = `- Ksh ${t.amount.toFixed(2)}`; amountColor = 'text-red-600'; icon = 'fa-arrow-up'; break;
-                    case 'referral-3%': 
-                        title = `Bonus from ${t.fromUser}`; amountText = `+ Ksh ${t.amount.toFixed(2)}`; amountColor = 'text-purple-600'; icon = 'fa-users'; break;
-                    default: 
-                        title = 'Transaction'; amountText = `Ksh ${t.amount.toFixed(2)}`; amountColor = 'text-gray-800'; icon = 'fa-exchange-alt';
+                const t = docSnap.data();
+                if (!t.timestamp) return; // Skip if timestamp is missing
+
+                const transactionDate = t.timestamp.toDate();
+                const dateKey = transactionDate.toISOString().split('T')[0]; // "YYYY-MM-DD"
+
+                // If this is the first transaction for a given day, create a new group for it
+                if (!groupedTransactions[dateKey]) {
+                    groupedTransactions[dateKey] = {
+                        dailySummary: { tasks: 0, referrals: 0, total: 0 },
+                        transactions: []
+                    };
                 }
-                DOMElements.transactionLog.innerHTML += `
-                    <div class="bg-white p-3 rounded-lg shadow-sm flex items-center space-x-4">
-                        <div class="w-10 h-10 rounded-full flex items-center justify-center ${amountColor.replace('text-', 'bg-').replace('-600', '-100')}">
-                           <i class="fas ${icon} ${amountColor}"></i>
-                        </div>
-                        <div class="flex-grow">
-                            <p class="font-semibold">${title}</p>
-                            <p class="text-xs text-gray-500">${t.timestamp.toDate().toLocaleString()}</p>
-                        </div>
-                        <p class="font-bold ${amountColor}">${amountText}</p>
-                    </div>`;
+
+                // Add the transaction to the list for that day
+                groupedTransactions[dateKey].transactions.push(t);
+
+                // If it's an earning, add it to the daily summary
+                if (t.type === 'task') {
+                    groupedTransactions[dateKey].dailySummary.tasks += t.amount;
+                    groupedTransactions[dateKey].dailySummary.total += t.amount;
+                } else if (t.type === 'referral-3%') {
+                    groupedTransactions[dateKey].dailySummary.referrals += t.amount;
+                    groupedTransactions[dateKey].dailySummary.total += t.amount;
+                }
             });
+
+            // Now, iterate through the grouped dates and render the HTML
+            for (const date in groupedTransactions) {
+                const group = groupedTransactions[date];
+                let dateGroupHTML = `<div class="space-y-3">`;
+
+                // 1. Add the Daily Earnings Summary card IF there were any earnings that day
+                if (group.dailySummary.total > 0) {
+                    dateGroupHTML += `
+                        <div class="bg-white p-4 rounded-lg shadow-sm w-full space-y-2 border-l-4 border-green-500">
+                            <div class="flex justify-between items-center">
+                                <p class="font-bold text-gray-800">${date}</p>
+                                <p class="font-bold text-green-600 text-lg">+Ksh ${group.dailySummary.total.toFixed(2)}</p>
+                            </div>
+                            <div class="border-t pt-2 text-sm text-gray-600">
+                                <p><strong>Tasks:</strong> Ksh ${group.dailySummary.tasks.toFixed(2)} | <strong>Referrals:</strong> Ksh ${group.dailySummary.referrals.toFixed(2)}</p>
+                            </div>
+                        </div>`;
+                } else {
+                    // If no earnings, just show the date as a simple header
+                     dateGroupHTML += `<p class="font-bold text-gray-800">${date}</p>`;
+                }
+
+                // 2. Add every individual transaction log for that day
+                group.transactions.forEach(t => {
+                    let title, amountText, amountColor, icon;
+                    // Define styles for each transaction type
+                    switch (t.type) {
+                        case 'deposit': 
+                            title = `Activation Deposit`; amountText = `+ Ksh ${t.amount.toFixed(2)}`; amountColor = 'text-blue-600'; icon = 'fa-arrow-down'; break;
+                        case 'task': 
+                            title = 'Task Profit'; amountText = `+ Ksh ${t.amount.toFixed(2)}`; amountColor = 'text-green-600'; icon = 'fa-check'; break;
+                        case 'withdrawal': 
+                            title = `Withdrawal to ${t.phone || '...'}`; amountText = `- Ksh ${t.amount.toFixed(2)}`; amountColor = 'text-red-600'; icon = 'fa-arrow-up'; break;
+                        case 'referral-3%': 
+                            title = `Bonus from ${t.fromUser || 'Referral'}`; amountText = `+ Ksh ${t.amount.toFixed(2)}`; amountColor = 'text-purple-600'; icon = 'fa-users'; break;
+                        default: 
+                            title = 'Transaction'; amountText = `Ksh ${t.amount.toFixed(2)}`; amountColor = 'text-gray-800'; icon = 'fa-exchange-alt';
+                    }
+
+                    // Only add individual logs for non-earning types, to avoid repetition with the summary card
+                    if (t.type !== 'task' && t.type !== 'referral-3%') {
+                         dateGroupHTML += `
+                            <div class="bg-white p-3 rounded-lg shadow-sm flex items-center space-x-4">
+                                <div class="w-10 h-10 rounded-full flex items-center justify-center ${amountColor.replace('text-', 'bg-').replace('-600', '-100')}">
+                                   <i class="fas ${icon} ${amountColor}"></i>
+                                </div>
+                                <div class="flex-grow">
+                                    <p class="font-semibold">${title}</p>
+                                    <p class="text-xs text-gray-500">${t.timestamp.toDate().toLocaleString()}</p>
+                                </div>
+                                <p class="font-bold ${amountColor}">${amountText}</p>
+                            </div>`;
+                    }
+                });
+
+                dateGroupHTML += `</div>`;
+                DOMElements.transactionLog.innerHTML += dateGroupHTML;
+            }
         };
         
         const openWithdrawModal = () => {
