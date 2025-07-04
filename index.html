@@ -40,7 +40,7 @@
                     <div class="mb-4">
                         <label for="signup-password" class="block text-sm font-medium text-gray-700">Password</label>
                         <input type="password" id="signup-password" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500">
-                        <p class="text-xs text-gray-500 mt-1">8+ characters, with uppercase, lowercase, number, and special character.</p>
+                        <p class="text-xs text-gray-500 mt-1">Minimum 6 characters.</p>
                     </div>
                     <div class="mb-6"><label for="signup-confirm-password" class="block text-sm font-medium text-gray-700">Confirm Password</label><input type="password" id="signup-confirm-password" required class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"></div>
                     <button type="submit" class="w-full bg-orange-500 text-white font-bold py-3 px-4 rounded-lg hover:bg-orange-600 transition duration-300 shadow-lg">Create Account</button>
@@ -313,7 +313,6 @@
             }
         };
 
-        // --- NEW AND IMPROVED "MY TEAM" RENDERER ---
         const renderMyTeam = async () => {
             if (!auth.currentUser) return;
             // Query for users who have the current user's ID as their referrerId
@@ -378,7 +377,6 @@
             });
         };
 
-        // --- NEW AND IMPROVED PROFIT PAGE RENDERER ---
         const renderProfitPage = async () => {
             if (!currentUserData) return;
 
@@ -520,9 +518,9 @@
             DOMElements.withdrawStep2.classList.add('hidden');
         };
         
+        // --- UPDATED: Simplified Password Validation ---
         const validatePassword = (password) => {
-            const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-            return regex.test(password);
+            return password.length >= 6;
         };
 
         // --- Event Listeners ---
@@ -532,8 +530,9 @@
             e.preventDefault();
             DOMElements.errorMessage.textContent = '';
             const password = DOMElements.signupForm['signup-password'].value;
+            // Use the simplified validation
             if (!validatePassword(password)) {
-                DOMElements.errorMessage.textContent = 'Password does not meet security requirements.';
+                DOMElements.errorMessage.textContent = 'Password must be at least 6 characters long.';
                 return;
             }
             if (password !== DOMElements.signupForm['signup-confirm-password'].value) {
