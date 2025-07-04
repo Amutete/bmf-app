@@ -155,41 +155,84 @@
             const updateBadge = (badge, count) => { badge.textContent = count; badge.classList.toggle('hidden', count === 0); };
             const populateLevelSelect = () => { DOMElements.modalLevelSelect.innerHTML = Object.keys(INVESTMENT_LEVELS).map(key => `<option value="${key}">${INVESTMENT_LEVELS[key].name}</option>`).join(''); };
 
-            // --- Notification Logic ---
-            const handleSendNotification = async (targetUsername, title, message, type) => {
-                 if (!title || !message) { showMessage("Title and message are required.", true); return; }
+            /**
+             * Sends a notification. Can send to all users or a single user by username.
+             * @param {string} title - The title of the notification.
+             * @param {string} message - The main content of the notification.
+             * @param {string} [type='info'] - The type of notification (e.g., 'info', 'success', 'rejected').
+             * @param {string|null} [targetUsername=null] - The username of a specific user. If null, sends to all.
+             */
+            const handleSendNotification = async (title, message, type = 'info', targetUsername = null) => {
+                if (!title || !message) {
+                    showMessage("Notification title and message are required.", true);
+                    return;
+                }
                 try {
+                    // Logic for sending to a single, specific user
                     if (targetUsername) {
-                        const q = query(collection(db, "users"), where("username", "==", targetUsername));
+                        const usersRef = collection(db, "users");
+                        const q = query(usersRef, where("username", "==", targetUsername));
                         const querySnapshot = await getDocs(q);
-                        if (querySnapshot.empty) { showMessage(`Error: User "${targetUsername}" not found.`, true); return; }
+
+                        if (querySnapshot.empty) {
+                            showMessage(`Error: User "${targetUsername}" not found.`, true);
+                            return;
+                        }
+                        
                         const userDoc = querySnapshot.docs[0];
-                        await addDoc(collection(db, "notifications"), { userId: userDoc.id, title, message, type, timestamp: serverTimestamp(), isRead: false });
-                        showMessage(`Notification sent to ${targetUsername}.`);
-                    } else {
+                        await addDoc(collection(db, "notifications"), {
+                            userId: userDoc.id,
+                            title,
+                            message,
+                            type,
+                            timestamp: serverTimestamp(),
+                            isRead: false
+                        });
+                        showMessage(`Notification successfully sent to ${targetUsername}.`);
+                    } 
+                    // Logic for sending to ALL users
+                    else {
                         const usersSnapshot = await getDocs(collection(db, "users"));
+                        if (usersSnapshot.empty) {
+                            showMessage("There are no users to notify.", true);
+                            return;
+                        }
+                        
                         const batch = writeBatch(db);
                         usersSnapshot.forEach(userDoc => {
                             const notifRef = doc(collection(db, "notifications"));
-                            batch.set(notifRef, { userId: userDoc.id, title, message, type, timestamp: serverTimestamp(), isRead: false });
+                            batch.set(notifRef, {
+                                userId: userDoc.id,
+                                title,
+                                message,
+                                type,
+                                timestamp: serverTimestamp(),
+                                isRead: false
+                            });
                         });
                         await batch.commit();
-                        showMessage(`Notification sent to all users.`);
+                        showMessage(`Notification sent to all ${usersSnapshot.size} users.`);
                     }
-                    DOMElements.notificationTitle.value = ''; DOMElements.notificationMessage.value = ''; DOMElements.notificationUserInput.value = '';
-                } catch (err) { showMessage("Error: " + err.message, true); }
+                    // Clear the input fields after sending
+                    DOMElements.notificationTitle.value = '';
+                    DOMElements.notificationMessage.value = '';
+                    DOMElements.notificationUserInput.value = '';
+                } catch (err) {
+                    console.error("Error sending notification:", err);
+                    showMessage("Error: " + err.message, true);
+                }
             };
-            
+
             // --- Deposit Request Logic ---
             const handleDepositRequest = async (action, userId, docId, username) => {
                 if (!confirm(`Are you sure you want to ${action} this deposit request for ${username}?`)) return;
                 try {
                     if (action === 'activate') {
                         await updateDoc(doc(db, 'users', userId), { activatedAt: serverTimestamp() });
-                        await handleSendNotification(username, 'Welcome to BMF!', "Your account has been activated! Explore available tasks to start your earning journey. We wish you the best!", 'info');
+                        await handleSendNotification('Welcome to BMF!', "Your account has been activated! Explore available tasks to start your earning journey. We wish you the best!", 'info', username);
                         showMessage(`${username} has been activated and welcomed!`);
                     } else if (action === 'reject') {
-                        await handleSendNotification(username, 'Deposit Request Rejected', "Your activation request was rejected. Please ensure you have made a valid deposit before submitting. Contact support if you believe this is an error.", 'rejected');
+                        await handleSendNotification('Deposit Request Rejected', "Your activation request was rejected. Please ensure you have made a valid deposit before submitting. Contact support if you believe this is an error.", 'rejected', username);
                         showMessage(`Request for ${username} rejected.`);
                     }
                     await deleteDoc(doc(db, 'admin_notifications', docId));
@@ -197,29 +240,19 @@
                 } catch (err) { showMessage(`Error: ${err.message}`, true); }
             };
             
-            // --- NEW/RESTORED: Withdrawal Request Logic ---
+            // --- Withdrawal Request Logic ---
             const handleWithdrawalRequest = async (action, userId, docId, username, amount) => {
                 if (!confirm(`Are you sure you want to ${action} this KES ${amount} withdrawal for ${username}?`)) return;
                 try {
                     const numericAmount = parseFloat(amount);
                     if (action === 'approve') {
-                        // Create a transaction record for the user
-                        await addDoc(collection(db, 'transactions'), {
-                            userId: userId,
-                            type: 'withdrawal_approved',
-                            amount: numericAmount,
-                            description: `Withdrawal of ${formatCurrency(numericAmount)} approved and processed.`,
-                            timestamp: serverTimestamp()
-                        });
-                        await handleSendNotification(username, 'Withdrawal Approved', `Your withdrawal request for ${formatCurrency(numericAmount)} has been approved and is being processed.`, 'success');
+                        await handleSendNotification('Withdrawal Approved', `Your withdrawal request for ${formatCurrency(numericAmount)} has been approved and is being processed.`, 'approved', username);
                         showMessage(`Withdrawal for ${username} approved.`);
                     } else if (action === 'reject') {
-                        // Return the funds to the user's account and notify them
                         await updateDoc(doc(db, 'users', userId), { totalAssets: increment(numericAmount) });
-                        await handleSendNotification(username, 'Withdrawal Rejected', `Your withdrawal request for ${formatCurrency(numericAmount)} was rejected. The funds have been returned to your account. Please contact support for details.`, 'rejected');
+                        await handleSendNotification('Withdrawal Rejected', `Your withdrawal request for ${formatCurrency(numericAmount)} was rejected. The funds have been returned to your account. Please contact support for details.`, 'rejected', username);
                         showMessage(`Withdrawal for ${username} rejected.`);
                     }
-                    // Delete the admin notification regardless of action
                     await deleteDoc(doc(db, 'admin_notifications', docId));
                 } catch (err) {
                     showMessage(`Error processing withdrawal: ${err.message}`, true);
@@ -245,13 +278,12 @@
                 const reportHTML = `<div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm"><div class="bg-white p-4 rounded-lg shadow"><strong>User ID:</strong><br>${user.uid}</div><div class="bg-white p-4 rounded-lg shadow"><strong>Joined:</strong><br>${formatDate(user.createdAt)}</div><div class="bg-white p-4 rounded-lg shadow"><strong>Activated:</strong><br>${formatDate(user.activatedAt)}</div></div><div><h4 class="font-bold text-lg mt-4 mb-2">Daily Earnings</h4><div class="bg-white p-4 rounded-lg shadow"><canvas id="earningsChartCanvas"></canvas></div></div><div><h4 class="font-bold text-lg mt-4 mb-2">Transaction History</h4><div id="transactions-table" class="bg-white p-4 rounded-lg shadow max-h-64 overflow-y-auto"></div></div><div><h4 class="font-bold text-lg mt-4 mb-2">Referral Team (${referrals.length})</h4><div id="referrals-table" class="bg-white p-4 rounded-lg shadow max-h-64 overflow-y-auto"></div></div>`;
                 DOMElements.reportContent.innerHTML = reportHTML;
 
-                document.getElementById('transactions-table').innerHTML = createHtmlTable(['Date', 'Type', 'Amount', 'Description'], transactions.map(t => [formatDate(t.timestamp), t.type, formatCurrency(t.amount), t.description]));
+                document.getElementById('transactions-table').innerHTML = createHtmlTable(['Date', 'Type', 'Amount', 'Description'], transactions.map(t => [formatDate(t.timestamp), t.type, formatCurrency(t.amount), t.description || 'N/A']));
                 document.getElementById('referrals-table').innerHTML = createHtmlTable(['Username', 'Email', 'Level'], referrals.map(r => [r.username, r.email, INVESTMENT_LEVELS[r.investmentLevel]?.name || 'N/A']));
 
                 if (earningsChart) earningsChart.destroy();
                 earningsChart = new Chart(document.getElementById('earningsChartCanvas').getContext('2d'), { type: 'line', data: { labels: earnings.map(e => e.date), datasets: [{ label: 'Daily Earnings (Ksh)', data: earnings.map(e => e.amount), borderColor: '#f97316', backgroundColor: 'rgba(249, 115, 22, 0.1)', fill: true, tension: 0.1 }] } });
             };
-
             const createHtmlTable = (headers, data) => {
                 let table = '<table class="w-full text-left text-sm"><thead><tr class="border-b">';
                 headers.forEach(h => table += `<th class="p-2">${h}</th>`);
@@ -260,7 +292,6 @@
                 data.forEach(row => { table += '<tr class="border-b">'; row.forEach(cell => table += `<td class="p-2">${cell}</td>`); table += '</tr>'; });
                 return table + '</tbody></table>';
             }
-
             const generatePdfReport = async () => {
                 showMessage("Generating PDF, please wait...");
                 const { jsPDF } = window.jspdf;
@@ -275,14 +306,14 @@
                 doc.autoTable({ startY: 40, head: [['User Details']], body: [['User ID', user.uid], ['Email', user.email], ['Joined', formatDate(user.createdAt)], ['Activated', formatDate(user.activatedAt)], ['Current Assets', formatCurrency(user.totalAssets)]] });
                 if (earningsChart.data.labels.length > 0) { doc.addPage(); doc.text("Daily Earnings Chart", 14, 20); doc.addImage(earningsChart.toBase64Image(), 'PNG', 14, 30, 180, 100); }
                 doc.addPage(); doc.text("Transaction History", 14, 20);
-                doc.autoTable({ startY: 25, head: [['Date', 'Type', 'Amount', 'Description']], body: transactions.map(t => [formatDate(t.timestamp), t.type, formatCurrency(t.amount), t.description]) });
+                doc.autoTable({ startY: 25, head: [['Date', 'Type', 'Amount', 'Description']], body: transactions.map(t => [formatDate(t.timestamp), t.type, formatCurrency(t.amount), t.description || 'N/A']) });
                 doc.text("Referral Team", 14, doc.autoTable.previous.finalY + 15);
                 doc.autoTable({ startY: doc.autoTable.previous.finalY + 20, head: [['Username', 'Email', 'Level']], body: referrals.map(r => [r.username, r.email, INVESTMENT_LEVELS[r.investmentLevel]?.name || 'N/A']) });
                 doc.save(`report-${user.username}-${new Date().toISOString().slice(0,10)}.pdf`);
             };
 
             // --- Modal Functions ---
-             const openUserModal = (user) => {
+            const openUserModal = (user) => {
                 selectedUserId = user.uid;
                 DOMElements.userModal.classList.remove('hidden');
                 DOMElements.modalUsername.textContent = `Manage Details: ${user.username}`;
@@ -311,27 +342,16 @@
                         DOMElements.depositsList.appendChild(el);
                     });
                     
-                    // --- MODIFIED/RESTORED: Display Withdrawal Requests ---
                     DOMElements.withdrawalsList.innerHTML = withdrawals.length > 0 ? '' : '<p class="text-gray-500 p-4 text-center">No new withdrawal requests.</p>';
                     withdrawals.forEach(docSnap => {
                         const notif = docSnap.data();
                         const el = document.createElement('div');
                         el.className = 'border p-3 rounded-lg shadow-sm bg-white text-gray-800';
-                        el.innerHTML = `
-                            <div>
-                                <p><span class="font-semibold">${notif.username}</span> requested a withdrawal of <span class="font-bold text-orange-600">${formatCurrency(notif.amount)}</span>.</p>
-                                <p class="text-xs text-gray-500">Phone: ${notif.phone || 'N/A'}</p>
-                                <p class="text-xs text-gray-500">User ID: ${notif.userId}</p>
-                            </div>
-                            <div class="flex space-x-2 mt-2">
-                                <button data-action="approve" data-uid="${notif.userId}" data-uname="${notif.username}" data-docid="${docSnap.id}" data-amount="${notif.amount}" class="withdrawal-action-btn flex-1 bg-green-500 text-white text-xs font-semibold py-1 px-3 rounded hover:bg-green-600">Approve</button>
-                                <button data-action="reject" data-uid="${notif.userId}" data-uname="${notif.username}" data-docid="${docSnap.id}" data-amount="${notif.amount}" class="withdrawal-action-btn flex-1 bg-red-600 text-white text-xs font-semibold py-1 px-3 rounded hover:bg-red-700">Reject</button>
-                            </div>`;
+                        el.innerHTML = `<div><p><span class="font-semibold">${notif.username}</span> requested a withdrawal of <span class="font-bold text-orange-600">${formatCurrency(notif.amount)}</span>.</p><p class="text-xs text-gray-500">Phone: ${notif.phone || 'N/A'}</p><p class="text-xs text-gray-500">User ID: ${notif.userId}</p></div><div class="flex space-x-2 mt-2"><button data-action="approve" data-uid="${notif.userId}" data-uname="${notif.username}" data-docid="${docSnap.id}" data-amount="${notif.amount}" class="withdrawal-action-btn flex-1 bg-green-500 text-white text-xs font-semibold py-1 px-3 rounded hover:bg-green-600">Approve</button><button data-action="reject" data-uid="${notif.userId}" data-uname="${notif.username}" data-docid="${docSnap.id}" data-amount="${notif.amount}" class="withdrawal-action-btn flex-1 bg-red-600 text-white text-xs font-semibold py-1 px-3 rounded hover:bg-red-700">Reject</button></div>`;
                         DOMElements.withdrawalsList.appendChild(el);
                     });
                 });
             };
-            
             const listenForUsers = () => {
                 onSnapshot(query(collection(db, 'users'), orderBy('createdAt', 'desc')), (snapshot) => {
                     DOMElements.usersList.innerHTML = snapshot.empty ? '<p class="text-center text-gray-500 p-4">No users found.</p>' : '';
@@ -341,13 +361,7 @@
                         totalAssets += user.totalAssets || 0;
                         const el = document.createElement('div');
                         el.className = 'border p-3 rounded-lg shadow-sm bg-white text-gray-800';
-                        el.innerHTML = `<div class="flex justify-between items-center"><div><p class="font-bold">${user.username}</p><p class="text-sm text-green-700 font-semibold">Assets: ${formatCurrency(user.totalAssets)}</p></div>
-                        <div class="flex items-center flex-wrap gap-2">
-                           <button data-user='${JSON.stringify(user)}' class="manage-details-btn bg-gray-600 text-white text-xs font-semibold py-1 px-3 rounded hover:bg-gray-700">Manage Details</button>
-                           <button data-user='${JSON.stringify(user)}' class="view-report-btn bg-teal-600 text-white text-xs font-semibold py-1 px-3 rounded hover:bg-teal-700">View Report</button>
-                           <button data-user='${JSON.stringify(user)}' class="manage-assets-btn bg-blue-600 text-white text-xs font-semibold py-1 px-3 rounded hover:bg-blue-700">Manage Assets</button>
-                           <button data-uid="${user.uid}" data-uname="${user.username}" class="delete-user-btn bg-red-600 text-white text-xs font-semibold py-1 px-3 rounded hover:bg-red-700">Delete</button>
-                        </div></div>`;
+                        el.innerHTML = `<div class="flex justify-between items-center"><div><p class="font-bold">${user.username}</p><p class="text-sm text-green-700 font-semibold">Assets: ${formatCurrency(user.totalAssets)}</p></div><div class="flex items-center flex-wrap gap-2"><button data-user='${JSON.stringify(user)}' class="manage-details-btn bg-gray-600 text-white text-xs font-semibold py-1 px-3 rounded hover:bg-gray-700">Manage Details</button><button data-user='${JSON.stringify(user)}' class="view-report-btn bg-teal-600 text-white text-xs font-semibold py-1 px-3 rounded hover:bg-teal-700">View Report</button><button data-user='${JSON.stringify(user)}' class="manage-assets-btn bg-blue-600 text-white text-xs font-semibold py-1 px-3 rounded hover:bg-blue-700">Manage Assets</button><button data-uid="${user.uid}" data-uname="${user.username}" class="delete-user-btn bg-red-600 text-white text-xs font-semibold py-1 px-3 rounded hover:bg-red-700">Delete</button></div></div>`;
                         DOMElements.usersList.appendChild(el);
                     });
                     DOMElements.statTotalUsers.textContent = snapshot.size;
@@ -355,7 +369,7 @@
                 });
             };
 
-            // --- App Initialization & Auth (FIXED) ---
+            // --- App Initialization & Auth ---
             onAuthStateChanged(auth, user => {
                 if (user && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
                     DOMElements.panelContainer.classList.remove('hidden');
@@ -366,83 +380,53 @@
                 } else {
                     DOMElements.panelContainer.classList.add('hidden');
                     DOMElements.loginContainer.style.display = 'flex';
-                    if (user) {
-                        signOut(auth);
-                    }
+                    if (user) { signOut(auth); }
                 }
             });
 
-            DOMElements.loginForm.addEventListener('submit', async e => { 
-                e.preventDefault(); 
-                DOMElements.errorMessage.textContent = '';
-                try { 
-                    await signInWithEmailAndPassword(auth, DOMElements.loginForm['admin-email'].value, DOMElements.loginForm['admin-password'].value);
-                } catch (err) { 
-                    DOMElements.errorMessage.textContent = err.message; 
-                } 
-            });
+            DOMElements.loginForm.addEventListener('submit', async e => { e.preventDefault(); DOMElements.errorMessage.textContent = ''; try { await signInWithEmailAndPassword(auth, DOMElements.loginForm['admin-email'].value, DOMElements.loginForm['admin-password'].value); } catch (err) { DOMElements.errorMessage.textContent = err.message; } });
             DOMElements.logoutBtn.addEventListener('click', () => signOut(auth));
             
-            // --- Event Delegation (MODIFIED) ---
+            // --- Event Delegation ---
             document.addEventListener('click', async e => {
                 const target = e.target.closest('button');
                 if (!target) return;
                 const btnClassList = target.classList;
 
-                if (btnClassList.contains('deposit-action-btn')) {
-                    handleDepositRequest(target.dataset.action, target.dataset.uid, target.dataset.docid, target.dataset.uname);
-                } else if (btnClassList.contains('withdrawal-action-btn')) { // <-- ADDED THIS BLOCK
-                    handleWithdrawalRequest(target.dataset.action, target.dataset.uid, target.dataset.docid, target.dataset.uname, target.dataset.amount);
-                } else if (btnClassList.contains('manage-details-btn')) {
-                    openUserModal(JSON.parse(target.dataset.user));
-                } else if (btnClassList.contains('view-report-btn')) {
-                    openReportModal(JSON.parse(target.dataset.user));
-                } else if (btnClassList.contains('manage-assets-btn')) {
-                    selectedUserData = JSON.parse(target.dataset.user);
-                    DOMElements.assetModal.classList.remove('hidden');
-                    DOMElements.assetModalUsername.textContent = `Assets for: ${selectedUserData.username}`;
-                    DOMElements.modalTotalAssets.value = selectedUserData.totalAssets || 0;
-                } else if (btnClassList.contains('delete-user-btn')) {
-                    if (confirm(`DANGER: Permanently delete ${target.dataset.uname}?`)) {
-                        try {
-                            await deleteDoc(doc(db, "users", target.dataset.uid));
-                            showMessage('User deleted.');
-                        } catch(e){
-                            showMessage('Error deleting user.', true);
-                        }
-                    }
-                }
+                if (btnClassList.contains('deposit-action-btn')) { handleDepositRequest(target.dataset.action, target.dataset.uid, target.dataset.docid, target.dataset.uname); } 
+                else if (btnClassList.contains('withdrawal-action-btn')) { handleWithdrawalRequest(target.dataset.action, target.dataset.uid, target.dataset.docid, target.dataset.uname, target.dataset.amount); }
+                else if (btnClassList.contains('manage-details-btn')) { openUserModal(JSON.parse(target.dataset.user)); } 
+                else if (btnClassList.contains('view-report-btn')) { openReportModal(JSON.parse(target.dataset.user)); }
+                else if (btnClassList.contains('manage-assets-btn')) { selectedUserData = JSON.parse(target.dataset.user); DOMElements.assetModal.classList.remove('hidden'); DOMElements.assetModalUsername.textContent = `Assets for: ${selectedUserData.username}`; DOMElements.modalTotalAssets.value = selectedUserData.totalAssets || 0; }
+                else if (btnClassList.contains('delete-user-btn')) { if (confirm(`DANGER: Permanently delete ${target.dataset.uname}?`)) { try { await deleteDoc(doc(db, "users", target.dataset.uid)); showMessage('User deleted.'); } catch(e){ showMessage('Error deleting user.', true); }}}
             });
             
             // --- Modal & Notification Listeners ---
             DOMElements.closeReportModalBtn.addEventListener('click', () => DOMElements.reportModal.classList.add('hidden'));
             DOMElements.downloadPdfBtn.addEventListener('click', generatePdfReport);
             DOMElements.closeUserModalBtn.addEventListener('click', () => DOMElements.userModal.classList.add('hidden'));
-            DOMElements.updateUserBtn.addEventListener('click', async () => {
-                if (!selectedUserId) return;
-                const updatePayload = {
-                    investmentLevel: DOMElements.modalLevelSelect.value,
-                    totalTaskProfit: parseFloat(DOMElements.modalTaskProfit.value),
-                    totalReferralBonus: parseFloat(DOMElements.modalReferralBonus.value)
-                };
-                try {
-                    await updateDoc(doc(db, 'users', selectedUserId), updatePayload);
-                    showMessage('User details updated!');
-                    DOMElements.userModal.classList.add('hidden');
-                } catch(e){ showMessage('Error updating details.', true); }
-            });
+            DOMElements.updateUserBtn.addEventListener('click', async () => { if (!selectedUserId) return; const updatePayload = { investmentLevel: DOMElements.modalLevelSelect.value, totalTaskProfit: parseFloat(DOMElements.modalTaskProfit.value), totalReferralBonus: parseFloat(DOMElements.modalReferralBonus.value) }; try { await updateDoc(doc(db, 'users', selectedUserId), updatePayload); showMessage('User details updated!'); DOMElements.userModal.classList.add('hidden'); } catch(e){ showMessage('Error updating details.', true); } });
             DOMElements.closeAssetModalBtn.addEventListener('click', () => DOMElements.assetModal.classList.add('hidden'));
-            DOMElements.updateAssetsBtn.addEventListener('click', async () => {
-                 if (!selectedUserData) return;
-                try {
-                    await updateDoc(doc(db, 'users', selectedUserData.uid), { totalAssets: parseFloat(DOMElements.modalTotalAssets.value) });
-                    showMessage('Assets updated!');
-                    DOMElements.assetModal.classList.add('hidden');
-                } catch(e){ showMessage('Error updating assets.', true); }
+            DOMElements.updateAssetsBtn.addEventListener('click', async () => { if (!selectedUserData) return; try { await updateDoc(doc(db, 'users', selectedUserData.uid), { totalAssets: parseFloat(DOMElements.modalTotalAssets.value) }); showMessage('Assets updated!'); DOMElements.assetModal.classList.add('hidden'); } catch(e){ showMessage('Error updating assets.', true); } });
+
+            // --- SIMPLIFIED NOTIFICATION BUTTONS ---
+            DOMElements.sendNotificationBtn.addEventListener('click', () => {
+                const targetUser = DOMElements.notificationUserInput.value.trim() || null;
+                const title = DOMElements.notificationTitle.value.trim();
+                const message = DOMElements.notificationMessage.value.trim();
+                handleSendNotification(title, message, 'info', targetUser);
             });
-            DOMElements.sendNotificationBtn.addEventListener('click', () => handleSendNotification(DOMElements.notificationUserInput.value.trim(), DOMElements.notificationTitle.value.trim(), DOMElements.notificationMessage.value.trim(), 'info'));
-            DOMElements.sendWelcomeBtn.addEventListener('click', () => handleSendNotification(DOMElements.notificationUserInput.value.trim(), 'Welcome to BMF!', "We're thrilled to have you. Explore tasks to start earning!", 'info'));
-            DOMElements.sendReminderBtn.addEventListener('click', () => handleSendNotification(DOMElements.notificationUserInput.value.trim(), 'Withdrawal Requirement', 'To unlock future withdrawals, you need at least two active referred members. Keep growing your team!', 'info'));
+
+            DOMElements.sendWelcomeBtn.addEventListener('click', () => {
+                const targetUser = DOMElements.notificationUserInput.value.trim() || null;
+                handleSendNotification('Welcome to BMF!', "We're thrilled to have you. Explore tasks to start earning!", 'info', targetUser);
+            });
+
+            DOMElements.sendReminderBtn.addEventListener('click', () => {
+                const targetUser = DOMElements.notificationUserInput.value.trim() || null;
+                handleSendNotification('Withdrawal Requirement', 'To unlock future withdrawals, you need at least two active referred members. Keep growing your team!', 'info', targetUser);
+            });
+
             DOMElements.navItems.forEach(link => { link.addEventListener('click', (e) => { e.preventDefault(); const targetId = link.dataset.target; DOMElements.navItems.forEach(l => l.classList.remove('active')); link.classList.add('active'); document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active')); document.getElementById(`${targetId}-section`).classList.add('active'); DOMElements.pageTitle.textContent = targetId.charAt(0).toUpperCase() + targetId.slice(1); }); });
         });
     </script>
