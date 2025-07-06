@@ -120,7 +120,37 @@
         </footer>
     </div>
     
-    <div id="deposit-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-40 p-4"><div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm text-center"><h3 class="font-bold text-xl mb-3">Deposit Instructions</h3><p class="text-gray-600 mb-4">Send your investment via M-Pesa to:</p><p class="font-bold text-2xl text-orange-500 bg-gray-100 py-2 rounded-lg mb-6">0745 875 920</p><p class="text-sm text-gray-500 mb-4">After sending, click below to notify the admin.</p><button id="complete-transaction-btn" class="w-full bg-green-500 text-white font-bold py-3 rounded-lg hover:bg-green-600 shadow-lg transition">I Have Paid, Notify Admin</button><button id="close-modal-btn" class="mt-3 text-gray-500 font-semibold">Close</button></div></div>
+    <div id="deposit-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-40 p-4">
+        <div id="deposit-step-1" class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm text-center">
+            <h3 class="font-bold text-xl mb-3">Deposit Instructions</h3>
+            <p class="text-gray-600 mb-4">Send your investment via M-Pesa to:</p>
+            <p class="font-bold text-2xl text-orange-500 bg-gray-100 py-2 rounded-lg mb-6">0745 875 920</p>
+            <p class="text-sm text-gray-500 mb-4">After sending the exact investment amount, click below to confirm.</p>
+            <button id="deposit-paid-btn" class="w-full bg-green-500 text-white font-bold py-3 rounded-lg hover:bg-green-600 shadow-lg transition">I Have Paid</button>
+            <button id="close-deposit-modal-btn" class="mt-3 text-gray-500 font-semibold">Close</button>
+        </div>
+        <div id="deposit-step-2" class="hidden bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm text-center">
+            <h3 class="font-bold text-xl mb-4">Confirm Your Payment</h3>
+            <p class="text-sm text-gray-600 mb-5">Enter the details from the M-Pesa confirmation message you received.</p>
+            <form id="deposit-confirmation-form">
+                <div class="mb-4">
+                    <label for="deposit-mpesa-name" class="block text-sm font-medium text-gray-700 text-left">M-Pesa Name</label>
+                    <input type="text" id="deposit-mpesa-name" required placeholder="e.g. John Doe" class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500">
+                </div>
+                <div class="mb-4">
+                    <label for="deposit-mpesa-phone" class="block text-sm font-medium text-gray-700 text-left">M-Pesa Phone Number</label>
+                    <input type="tel" id="deposit-mpesa-phone" required placeholder="e.g. 0712345678" class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500">
+                </div>
+                 <div class="mb-6">
+                    <label for="deposit-amount" class="block text-sm font-medium text-gray-700 text-left">Amount Paid (Ksh)</label>
+                    <input type="number" id="deposit-amount" required placeholder="e.g. 4000" class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500">
+                </div>
+                <button type="submit" class="w-full bg-orange-500 text-white font-bold py-3 rounded-lg hover:bg-orange-600 shadow-lg transition">Notify Admin</button>
+            </form>
+             <button id="back-to-deposit-step-1-btn" class="mt-3 text-gray-500 font-semibold">Back</button>
+        </div>
+    </div>
+    
     <div id="withdraw-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-40 p-4">
          <div id="withdraw-step-1" class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm text-center">
             <h3 class="font-bold text-xl mb-4">Select Withdrawal Amount</h3>
@@ -163,7 +193,16 @@
         const DOMElements = {
             authContainer: document.getElementById('auth-container'), appContainer: document.getElementById('app-container'), errorMessage: document.getElementById('error-message'), loginTabBtn: document.getElementById('login-tab-btn'), signupTabBtn: document.getElementById('signup-tab-btn'), loginForm: document.getElementById('login-form'), signupForm: document.getElementById('signup-form'), logoutBtn: document.getElementById('logout-btn'), navItems: document.querySelectorAll('.nav-item'), pages: { home: document.getElementById('page-home'), work: document.getElementById('page-work'), profit: document.getElementById('page-profit'), my: document.getElementById('page-my'), notifications: document.getElementById('page-notifications') },
             userNameDisplay: document.getElementById('user-name-display'), totalAssetsDisplay: document.getElementById('total-assets-display'), myUsername: document.getElementById('my-username'), myEmail: document.getElementById('my-email'), myUserid: document.getElementById('my-userid'), referralLinkInput: document.getElementById('referral-link-input'), copyReferralBtn: document.getElementById('copy-referral-btn'), workContent: document.getElementById('work-content'), taskFeedback: document.getElementById('task-feedback'), contractCountdownDisplay: document.getElementById('contract-countdown-display'), transactionLog: document.getElementById('transaction-log'), myTeamList: document.getElementById('my-team-list'), profitTasks: document.getElementById('profit-tasks'), profitReferrals: document.getElementById('profit-referrals'),
-            depositBtn: document.getElementById('deposit-btn'), depositModal: document.getElementById('deposit-modal'), closeModalBtn: document.getElementById('close-modal-btn'), completeTransactionBtn: document.getElementById('complete-transaction-btn'),
+            // MODIFIED Deposit Modal Elements
+            depositBtn: document.getElementById('deposit-btn'),
+            depositModal: document.getElementById('deposit-modal'),
+            depositStep1: document.getElementById('deposit-step-1'),
+            depositStep2: document.getElementById('deposit-step-2'),
+            depositPaidBtn: document.getElementById('deposit-paid-btn'),
+            closeDepositModalBtn: document.getElementById('close-deposit-modal-btn'),
+            depositConfirmationForm: document.getElementById('deposit-confirmation-form'),
+            backToDepositStep1Btn: document.getElementById('back-to-deposit-step-1-btn'),
+            // Withdraw Modal Elements
             withdrawBtn: document.getElementById('withdraw-btn'), withdrawModal: document.getElementById('withdraw-modal'), withdrawStep1: document.getElementById('withdraw-step-1'), withdrawStep2: document.getElementById('withdraw-step-2'), withdrawOptions: document.getElementById('withdraw-options'), withdrawConfirmAmount: document.getElementById('withdraw-confirm-amount'), withdrawPhoneNumber: document.getElementById('withdraw-phone-number'), submitWithdrawalBtn: document.getElementById('submit-withdrawal-btn'), cancelWithdrawModalBtn: document.getElementById('cancel-withdraw-modal-btn'), backToWithdrawOptionsBtn: document.getElementById('back-to-withdraw-options-btn'),
             notificationBtn: document.getElementById('notification-btn'), notificationDot: document.getElementById('notification-dot'), notificationsList: document.getElementById('notifications-list'),
             messageModal: document.getElementById('message-modal'), messageModalText: document.getElementById('message-modal-text')
@@ -285,14 +324,12 @@
             const userRef = doc(db, "users", auth.currentUser.uid);
             const batch = writeBatch(db);
             
-            // Update current user's data
             batch.update(userRef, { 
                 totalAssets: increment(earnings), 
                 tasksCompletedToday: increment(1), 
                 totalTaskProfit: increment(earnings) 
             });
             
-            // Create a transaction log for the current user
             batch.set(doc(collection(db, "transactions")), { 
                 userId: auth.currentUser.uid, 
                 amount: earnings, 
@@ -300,9 +337,6 @@
                 timestamp: serverTimestamp() 
             });
             
-            // The referrer bonus logic has been removed from here because it violates
-            // security rules. It should be handled by a secure backend function.
-
             try {
                 await batch.commit();
                 DOMElements.taskFeedback.textContent = `Task completed! +Ksh ${earnings.toFixed(2)} added.`;
@@ -315,11 +349,10 @@
 
         const renderMyTeam = async () => {
             if (!auth.currentUser) return;
-            // Query for users who have the current user's ID as their referrerId
             const q = query(collection(db, "users"), where("referrerId", "==", auth.currentUser.uid), orderBy("createdAt", "desc"));
             const querySnapshot = await getDocs(q);
 
-            DOMElements.myTeamList.innerHTML = ''; // Clear the list before rendering
+            DOMElements.myTeamList.innerHTML = '';
             if (querySnapshot.empty) {
                 DOMElements.myTeamList.innerHTML = '<p class="text-gray-500 text-center p-4">You have not referred anyone yet. Share your link to build your team!</p>';
                 return;
@@ -329,20 +362,12 @@
                 const member = docSnap.data();
                 const levelKey = member.investmentLevel || 'None';
                 const levelInfo = INVESTMENT_LEVELS[levelKey];
-
-                // Determine account status and activation date
                 const isActivated = member.activatedAt && member.investmentLevel !== 'None';
                 const status = isActivated ? 'Active' : 'Dormant';
                 const statusColor = isActivated ? 'bg-green-500' : 'bg-yellow-500';
                 const activatedDate = isActivated ? member.activatedAt.toDate().toLocaleDateString() : 'N/A';
-                
-                // Get registration date
                 const joinDate = member.createdAt?.toDate().toLocaleDateString() || 'Unknown';
-
-                // Calculate potential daily earnings
                 const dailyEarning = levelInfo ? (levelInfo.tasks * levelInfo.amountPerTask) : 0;
-
-                // Create the new, detailed card for each team member
                 const memberCard = `
                     <div class="bg-white p-4 rounded-xl shadow-md border border-gray-200 space-y-3">
                         <div class="flex justify-between items-start">
@@ -352,138 +377,68 @@
                                 <div class="w-3 h-3 rounded-full ${statusColor}"></div>
                             </div>
                         </div>
-                        
                         <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm text-gray-700 border-t pt-3">
-                            <div>
-                                <p class="font-semibold">Level:</p>
-                                <p>${levelInfo.name}</p>
-                            </div>
-                            <div>
-                                <p class="font-semibold">Daily Potential:</p>
-                                <p>Ksh ${dailyEarning.toFixed(2)}</p>
-                            </div>
-                            <div>
-                                <p class="font-semibold">Date Joined:</p>
-                                <p>${joinDate}</p>
-                            </div>
-                            <div>
-                                <p class="font-semibold">Date Activated:</p>
-                                <p>${activatedDate}</p>
-                            </div>
+                            <div><p class="font-semibold">Level:</p><p>${levelInfo.name}</p></div>
+                            <div><p class="font-semibold">Daily Potential:</p><p>Ksh ${dailyEarning.toFixed(2)}</p></div>
+                            <div><p class="font-semibold">Date Joined:</p><p>${joinDate}</p></div>
+                            <div><p class="font-semibold">Date Activated:</p><p>${activatedDate}</p></div>
                         </div>
-                    </div>
-                `;
+                    </div>`;
                 DOMElements.myTeamList.innerHTML += memberCard;
             });
         };
 
         const renderProfitPage = async () => {
             if (!currentUserData) return;
-
-            // Update the lifetime total cards at the top of the page
             DOMElements.profitTasks.textContent = `Ksh ${(currentUserData.totalTaskProfit || 0).toFixed(2)}`;
             DOMElements.profitReferrals.textContent = `Ksh ${(currentUserData.totalReferralBonus || 0).toFixed(2)}`;
-            
-            // Fetch all transaction types for the current user
-            const q = query(
-                collection(db, "transactions"), 
-                where("userId", "==", auth.currentUser.uid), 
-                orderBy("timestamp", "desc")
-            );
+            const q = query(collection(db, "transactions"), where("userId", "==", auth.currentUser.uid), orderBy("timestamp", "desc"));
             const querySnapshot = await getDocs(q);
-
-            DOMElements.transactionLog.innerHTML = ''; // Clear previous logs
+            DOMElements.transactionLog.innerHTML = '';
             if (querySnapshot.empty) {
                 DOMElements.transactionLog.innerHTML = '<p class="text-gray-500 text-center">No transactions have been recorded yet.</p>';
                 return;
             }
-
-            // This object will hold all transactions grouped by date, e.g., { "2025-07-04": { ... } }
             const groupedTransactions = {};
-
             querySnapshot.docs.forEach(docSnap => {
                 const t = docSnap.data();
-                if (!t.timestamp) return; // Skip if timestamp is missing
-
-                const transactionDate = t.timestamp.toDate();
-                const dateKey = transactionDate.toISOString().split('T')[0]; // "YYYY-MM-DD"
-
-                // If this is the first transaction for a given day, create a new group for it
+                if (!t.timestamp) return;
+                const dateKey = t.timestamp.toDate().toISOString().split('T')[0];
                 if (!groupedTransactions[dateKey]) {
-                    groupedTransactions[dateKey] = {
-                        dailySummary: { tasks: 0, referrals: 0, total: 0 },
-                        transactions: []
-                    };
+                    groupedTransactions[dateKey] = { dailySummary: { tasks: 0, referrals: 0, total: 0 }, transactions: [] };
                 }
-
-                // Add the transaction to the list for that day
                 groupedTransactions[dateKey].transactions.push(t);
-
-                // If it's an earning, add it to the daily summary
-                if (t.type === 'task') {
-                    groupedTransactions[dateKey].dailySummary.tasks += t.amount;
-                    groupedTransactions[dateKey].dailySummary.total += t.amount;
-                } else if (t.type === 'referral-3%') {
-                    groupedTransactions[dateKey].dailySummary.referrals += t.amount;
-                    groupedTransactions[dateKey].dailySummary.total += t.amount;
-                }
+                if (t.type === 'task') { groupedTransactions[dateKey].dailySummary.tasks += t.amount; groupedTransactions[dateKey].dailySummary.total += t.amount; } 
+                else if (t.type === 'referral-3%') { groupedTransactions[dateKey].dailySummary.referrals += t.amount; groupedTransactions[dateKey].dailySummary.total += t.amount; }
             });
-
-            // Now, iterate through the grouped dates and render the HTML
             for (const date in groupedTransactions) {
                 const group = groupedTransactions[date];
                 let dateGroupHTML = `<div class="space-y-3">`;
-
-                // 1. Add the Daily Earnings Summary card IF there were any earnings that day
                 if (group.dailySummary.total > 0) {
                     dateGroupHTML += `
                         <div class="bg-white p-4 rounded-lg shadow-sm w-full space-y-2 border-l-4 border-green-500">
-                            <div class="flex justify-between items-center">
-                                <p class="font-bold text-gray-800">${date}</p>
-                                <p class="font-bold text-green-600 text-lg">+Ksh ${group.dailySummary.total.toFixed(2)}</p>
-                            </div>
-                            <div class="border-t pt-2 text-sm text-gray-600">
-                                <p><strong>Tasks:</strong> Ksh ${group.dailySummary.tasks.toFixed(2)} | <strong>Referrals:</strong> Ksh ${group.dailySummary.referrals.toFixed(2)}</p>
-                            </div>
+                            <div class="flex justify-between items-center"><p class="font-bold text-gray-800">${date}</p><p class="font-bold text-green-600 text-lg">+Ksh ${group.dailySummary.total.toFixed(2)}</p></div>
+                            <div class="border-t pt-2 text-sm text-gray-600"><p><strong>Tasks:</strong> Ksh ${group.dailySummary.tasks.toFixed(2)} | <strong>Referrals:</strong> Ksh ${group.dailySummary.referrals.toFixed(2)}</p></div>
                         </div>`;
-                } else {
-                    // If no earnings, just show the date as a simple header
-                     dateGroupHTML += `<p class="font-bold text-gray-800">${date}</p>`;
-                }
-
-                // 2. Add every individual transaction log for that day
+                } else { dateGroupHTML += `<p class="font-bold text-gray-800">${date}</p>`; }
                 group.transactions.forEach(t => {
                     let title, amountText, amountColor, icon;
-                    // Define styles for each transaction type
                     switch (t.type) {
-                        case 'deposit': 
-                            title = `Activation Deposit`; amountText = `+ Ksh ${t.amount.toFixed(2)}`; amountColor = 'text-blue-600'; icon = 'fa-arrow-down'; break;
-                        case 'task': 
-                            title = 'Task Profit'; amountText = `+ Ksh ${t.amount.toFixed(2)}`; amountColor = 'text-green-600'; icon = 'fa-check'; break;
-                        case 'withdrawal': 
-                            title = `Withdrawal to ${t.phone || '...'}`; amountText = `- Ksh ${t.amount.toFixed(2)}`; amountColor = 'text-red-600'; icon = 'fa-arrow-up'; break;
-                        case 'referral-3%': 
-                            title = `Bonus from ${t.fromUser || 'Referral'}`; amountText = `+ Ksh ${t.amount.toFixed(2)}`; amountColor = 'text-purple-600'; icon = 'fa-users'; break;
-                        default: 
-                            title = 'Transaction'; amountText = `Ksh ${t.amount.toFixed(2)}`; amountColor = 'text-gray-800'; icon = 'fa-exchange-alt';
+                        case 'deposit': title = `Activation Deposit`; amountText = `+ Ksh ${t.amount.toFixed(2)}`; amountColor = 'text-blue-600'; icon = 'fa-arrow-down'; break;
+                        case 'task': title = 'Task Profit'; amountText = `+ Ksh ${t.amount.toFixed(2)}`; amountColor = 'text-green-600'; icon = 'fa-check'; break;
+                        case 'withdrawal': title = `Withdrawal to ${t.phone || '...'}`; amountText = `- Ksh ${t.amount.toFixed(2)}`; amountColor = 'text-red-600'; icon = 'fa-arrow-up'; break;
+                        case 'referral-3%': title = `Bonus from ${t.fromUser || 'Referral'}`; amountText = `+ Ksh ${t.amount.toFixed(2)}`; amountColor = 'text-purple-600'; icon = 'fa-users'; break;
+                        default: title = 'Transaction'; amountText = `Ksh ${t.amount.toFixed(2)}`; amountColor = 'text-gray-800'; icon = 'fa-exchange-alt';
                     }
-
-                    // Only add individual logs for non-earning types, to avoid repetition with the summary card
                     if (t.type !== 'task' && t.type !== 'referral-3%') {
                          dateGroupHTML += `
                             <div class="bg-white p-3 rounded-lg shadow-sm flex items-center space-x-4">
-                                <div class="w-10 h-10 rounded-full flex items-center justify-center ${amountColor.replace('text-', 'bg-').replace('-600', '-100')}">
-                                   <i class="fas ${icon} ${amountColor}"></i>
-                                </div>
-                                <div class="flex-grow">
-                                    <p class="font-semibold">${title}</p>
-                                    <p class="text-xs text-gray-500">${t.timestamp.toDate().toLocaleString()}</p>
-                                </div>
+                                <div class="w-10 h-10 rounded-full flex items-center justify-center ${amountColor.replace('text-', 'bg-').replace('-600', '-100')}"><i class="fas ${icon} ${amountColor}"></i></div>
+                                <div class="flex-grow"><p class="font-semibold">${title}</p><p class="text-xs text-gray-500">${t.timestamp.toDate().toLocaleString()}</p></div>
                                 <p class="font-bold ${amountColor}">${amountText}</p>
                             </div>`;
                     }
                 });
-
                 dateGroupHTML += `</div>`;
                 DOMElements.transactionLog.innerHTML += dateGroupHTML;
             }
@@ -518,10 +473,7 @@
             DOMElements.withdrawStep2.classList.add('hidden');
         };
         
-        // --- UPDATED: Simplified Password Validation ---
-        const validatePassword = (password) => {
-            return password.length >= 6;
-        };
+        const validatePassword = (password) => { return password.length >= 6; };
 
         // --- Event Listeners ---
         DOMElements.loginForm.addEventListener('submit', async (e) => { e.preventDefault(); try { await signInWithEmailAndPassword(auth, DOMElements.loginForm['login-email'].value, DOMElements.loginForm['login-password'].value); } catch (error) { DOMElements.errorMessage.textContent = error.message.replace('Firebase: ', ''); } });
@@ -530,38 +482,75 @@
             e.preventDefault();
             DOMElements.errorMessage.textContent = '';
             const password = DOMElements.signupForm['signup-password'].value;
-            // Use the simplified validation
-            if (!validatePassword(password)) {
-                DOMElements.errorMessage.textContent = 'Password must be at least 6 characters long.';
-                return;
-            }
-            if (password !== DOMElements.signupForm['signup-confirm-password'].value) {
-                DOMElements.errorMessage.textContent = "Passwords do not match.";
-                return;
-            }
+            if (!validatePassword(password)) { DOMElements.errorMessage.textContent = 'Password must be at least 6 characters long.'; return; }
+            if (password !== DOMElements.signupForm['signup-confirm-password'].value) { DOMElements.errorMessage.textContent = "Passwords do not match."; return; }
             try {
                 const userCredential = await createUserWithEmailAndPassword(auth, DOMElements.signupForm['signup-email'].value, password);
                 const userRef = doc(db, "users", userCredential.user.uid);
                 const urlParams = new URLSearchParams(window.location.search);
                 await setDoc(userRef, { uid: userCredential.user.uid, username: DOMElements.signupForm['signup-username'].value, email: userCredential.user.email, createdAt: serverTimestamp(), investmentLevel: 'None', totalAssets: 0, totalTaskProfit: 0, totalReferralBonus: 0, contractEndDate: null, referrerId: urlParams.get('ref') || null, lastResetDate: new Date().toISOString().split('T')[0], tasksCompletedToday: 0 });
-            } catch (error) {
-                DOMElements.errorMessage.textContent = error.message.replace('Firebase: ', '');
-            }
+            } catch (error) { DOMElements.errorMessage.textContent = error.message.replace('Firebase: ', ''); }
         });
         
         DOMElements.logoutBtn.addEventListener('click', () => { if (confirm("Are you sure?")) signOut(auth); });
         DOMElements.copyReferralBtn.addEventListener('click', () => { DOMElements.referralLinkInput.select(); document.execCommand('copy'); showMessage('Referral link copied!'); });
-        DOMElements.depositBtn.addEventListener('click', () => DOMElements.depositModal.classList.remove('hidden'));
-        DOMElements.closeModalBtn.addEventListener('click', () => DOMElements.depositModal.classList.add('hidden'));
-        DOMElements.completeTransactionBtn.addEventListener('click', async () => { try { await addDoc(collection(db, 'admin_notifications'), { userId: auth.currentUser.uid, username: currentUserData.username, type: 'deposit_paid', message: `${currentUserData.username} has reported making a deposit.`, timestamp: serverTimestamp(), status: 'pending' }); showMessage('Admin has been notified.'); DOMElements.depositModal.classList.add('hidden'); } catch (e) { showMessage('Could not notify admin.', true); } });
+        
+        // MODIFIED Deposit Listeners
+        DOMElements.depositBtn.addEventListener('click', () => {
+            DOMElements.depositModal.classList.remove('hidden');
+            DOMElements.depositStep1.classList.remove('hidden');
+            DOMElements.depositStep2.classList.add('hidden');
+        });
+        DOMElements.closeDepositModalBtn.addEventListener('click', () => DOMElements.depositModal.classList.add('hidden'));
+        DOMElements.depositPaidBtn.addEventListener('click', () => {
+            DOMElements.depositStep1.classList.add('hidden');
+            DOMElements.depositStep2.classList.remove('hidden');
+        });
+        DOMElements.backToDepositStep1Btn.addEventListener('click', () => {
+            DOMElements.depositStep2.classList.add('hidden');
+            DOMElements.depositStep1.classList.remove('hidden');
+        });
+        DOMElements.depositConfirmationForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const mpesaName = DOMElements.depositConfirmationForm['deposit-mpesa-name'].value.trim();
+            const mpesaPhone = DOMElements.depositConfirmationForm['deposit-mpesa-phone'].value.trim();
+            const amount = parseFloat(DOMElements.depositConfirmationForm['deposit-amount'].value);
+
+            if (!mpesaName || !mpesaPhone || isNaN(amount) || amount <= 0) { showMessage('Please fill in all fields with valid information.', true); return; }
+            if (!/^(07|01)\d{8}$/.test(mpesaPhone)) { showMessage('Please enter a valid M-Pesa number (e.g., 0712345678).', true); return; }
+
+            const submitBtn = DOMElements.depositConfirmationForm.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Submitting...';
+
+            try {
+                await addDoc(collection(db, 'admin_notifications'), {
+                    userId: auth.currentUser.uid,
+                    username: currentUserData.username,
+                    type: 'deposit_paid',
+                    message: `${currentUserData.username} has reported a deposit of Ksh ${amount.toFixed(2)} from ${mpesaName} (${mpesaPhone}).`,
+                    mpesaName: mpesaName,
+                    mpesaPhone: mpesaPhone,
+                    amount: amount,
+                    timestamp: serverTimestamp(),
+                    status: 'pending'
+                });
+                showMessage('Admin has been notified. Your account will be updated upon confirmation.');
+                DOMElements.depositModal.classList.add('hidden');
+                DOMElements.depositConfirmationForm.reset();
+            } catch (err) {
+                showMessage('Could not notify admin. Please try again.', true);
+                console.error("Error sending deposit notification:", err);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Notify Admin';
+            }
+        });
+
+        // Withdraw Listeners
         DOMElements.withdrawBtn.addEventListener('click', openWithdrawModal);
         DOMElements.cancelWithdrawModalBtn.addEventListener('click', () => DOMElements.withdrawModal.classList.add('hidden'));
         DOMElements.backToWithdrawOptionsBtn.addEventListener('click', () => { DOMElements.withdrawStep1.classList.remove('hidden'); DOMElements.withdrawStep2.classList.add('hidden'); });
-        DOMElements.notificationBtn.addEventListener('click', () => switchPage('notifications'));
-        DOMElements.navItems.forEach(item => item.addEventListener('click', () => switchPage(item.dataset.page)));
-        DOMElements.loginTabBtn.addEventListener('click', () => switchAuthTab('login'));
-        DOMElements.signupTabBtn.addEventListener('click', () => switchAuthTab('signup'));
-        
         DOMElements.submitWithdrawalBtn.addEventListener('click', async (e) => {
             const amount = parseFloat(e.target.dataset.amount);
             const phone = DOMElements.withdrawPhoneNumber.value.trim();
@@ -571,13 +560,10 @@
                 const userRef = doc(db, "users", auth.currentUser.uid);
                 const batch = writeBatch(db);
                 batch.update(userRef, { totalAssets: increment(-amount), lastWithdrawalDate: serverTimestamp() });
-                
                 const adminNotifRef = doc(collection(db, 'admin_notifications'));
                 batch.set(adminNotifRef, { userId: auth.currentUser.uid, username: currentUserData.username, type: 'withdrawal_request', amount, phone, timestamp: serverTimestamp() });
-
                 const transactionRef = doc(collection(db, 'transactions'));
                 batch.set(transactionRef, { userId: auth.currentUser.uid, amount, phone, type: 'withdrawal', timestamp: serverTimestamp() });
-
                 await batch.commit();
                 showMessage('Withdrawal request sent!');
                 DOMElements.withdrawModal.classList.add('hidden');
@@ -585,21 +571,25 @@
             } catch(err) { showMessage('Request failed. Please try again.', true); console.error(err); }
         });
         
+        // General App Listeners
+        DOMElements.notificationBtn.addEventListener('click', () => switchPage('notifications'));
+        DOMElements.navItems.forEach(item => item.addEventListener('click', () => switchPage(item.dataset.page)));
+        DOMElements.loginTabBtn.addEventListener('click', () => switchAuthTab('login'));
+        DOMElements.signupTabBtn.addEventListener('click', () => switchAuthTab('signup'));
+        
         onAuthStateChanged(auth, user => {
             if (user) { 
                 DOMElements.authContainer.classList.add('hidden'); 
                 DOMElements.appContainer.style.display = 'flex'; 
                 listenToAllData(user); 
                 switchPage('home');
-                
                 const persistedEndTime = localStorage.getItem('taskTimerEndTime');
                 if (persistedEndTime && parseInt(persistedEndTime) > Date.now()) {
                     taskTimerEndTime = parseInt(persistedEndTime);
                     renderWorkPage(currentUserData);
                 }
-
                 canAutoLogout = false;
-                setTimeout(() => { canAutoLogout = true; }, 120000); // 2 minute (120,000 ms) grace period
+                setTimeout(() => { canAutoLogout = true; }, 120000);
             } 
             else { 
                 if (countdownInterval) { clearInterval(countdownInterval); countdownInterval = null; }

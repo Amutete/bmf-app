@@ -155,20 +155,12 @@
             const updateBadge = (badge, count) => { badge.textContent = count; badge.classList.toggle('hidden', count === 0); };
             const populateLevelSelect = () => { DOMElements.modalLevelSelect.innerHTML = Object.keys(INVESTMENT_LEVELS).map(key => `<option value="${key}">${INVESTMENT_LEVELS[key].name}</option>`).join(''); };
 
-            /**
-             * Sends a notification. Can send to all users or a single user by username.
-             * @param {string} title - The title of the notification.
-             * @param {string} message - The main content of the notification.
-             * @param {string} [type='info'] - The type of notification (e.g., 'info', 'success', 'rejected').
-             * @param {string|null} [targetUsername=null] - The username of a specific user. If null, sends to all.
-             */
             const handleSendNotification = async (title, message, type = 'info', targetUsername = null) => {
                 if (!title || !message) {
                     showMessage("Notification title and message are required.", true);
                     return;
                 }
                 try {
-                    // Logic for sending to a single, specific user
                     if (targetUsername) {
                         const usersRef = collection(db, "users");
                         const q = query(usersRef, where("username", "==", targetUsername));
@@ -190,7 +182,6 @@
                         });
                         showMessage(`Notification successfully sent to ${targetUsername}.`);
                     } 
-                    // Logic for sending to ALL users
                     else {
                         const usersSnapshot = await getDocs(collection(db, "users"));
                         if (usersSnapshot.empty) {
@@ -213,7 +204,6 @@
                         await batch.commit();
                         showMessage(`Notification sent to all ${usersSnapshot.size} users.`);
                     }
-                    // Clear the input fields after sending
                     DOMElements.notificationTitle.value = '';
                     DOMElements.notificationMessage.value = '';
                     DOMElements.notificationUserInput.value = '';
@@ -336,9 +326,29 @@
 
                     DOMElements.depositsList.innerHTML = deposits.length > 0 ? '' : '<p class="text-gray-500 p-4 text-center">No new deposit requests.</p>';
                     deposits.forEach(docSnap => {
-                        const notif = docSnap.data(); const el = document.createElement('div');
+                        const notif = docSnap.data(); 
+                        const el = document.createElement('div');
                         el.className = 'border p-3 rounded-lg shadow-sm bg-white text-gray-800';
-                        el.innerHTML = `<div><p><span class="font-semibold">${notif.username}</span> reported a deposit.</p><p class="text-xs text-gray-500">User ID: ${notif.userId}</p></div><div class="flex space-x-2 mt-2"><button data-action="activate" data-uid="${notif.userId}" data-uname="${notif.username}" data-docid="${docSnap.id}" class="deposit-action-btn flex-1 bg-blue-500 text-white text-xs font-semibold py-1 px-3 rounded hover:bg-blue-600">Activate</button><button data-action="reject" data-uid="${notif.userId}" data-uname="${notif.username}" data-docid="${docSnap.id}" class="deposit-action-btn flex-1 bg-yellow-500 text-white text-xs font-semibold py-1 px-3 rounded hover:bg-yellow-600">Reject</button><button data-action="delete" data-uid="${notif.userId}" data-uname="${notif.username}" data-docid="${docSnap.id}" class="deposit-action-btn flex-1 bg-red-600 text-white text-xs font-semibold py-1 px-3 rounded hover:bg-red-700">Delete</button></div>`;
+                        
+                        // *** MODIFIED PART: Check for new details and display them ***
+                        const detailsHTML = notif.amount ?
+                            `<div class="mt-2 pt-2 border-t border-gray-200 text-sm">
+                                <p><strong>Amount:</strong> <span class="font-bold text-green-600">${formatCurrency(notif.amount)}</span></p>
+                                <p><strong>From Name:</strong> ${notif.mpesaName || 'Not Provided'}</p>
+                                <p><strong>From Phone:</strong> ${notif.mpesaPhone || 'Not Provided'}</p>
+                            </div>` :
+                            '<p class="text-sm mt-1 text-gray-500">(No payment details provided)</p>';
+
+                        el.innerHTML = `<div>
+                                            <p><span class="font-semibold">${notif.username}</span> reported a deposit.</p>
+                                            ${detailsHTML}
+                                            <p class="text-xs text-gray-500 mt-1">User ID: ${notif.userId}</p>
+                                        </div>
+                                        <div class="flex space-x-2 mt-2">
+                                            <button data-action="activate" data-uid="${notif.userId}" data-uname="${notif.username}" data-docid="${docSnap.id}" class="deposit-action-btn flex-1 bg-blue-500 text-white text-xs font-semibold py-1 px-3 rounded hover:bg-blue-600">Activate</button>
+                                            <button data-action="reject" data-uid="${notif.userId}" data-uname="${notif.username}" data-docid="${docSnap.id}" class="deposit-action-btn flex-1 bg-yellow-500 text-white text-xs font-semibold py-1 px-3 rounded hover:bg-yellow-600">Reject</button>
+                                            <button data-action="delete" data-uid="${notif.userId}" data-uname="${notif.username}" data-docid="${docSnap.id}" class="deposit-action-btn flex-1 bg-red-600 text-white text-xs font-semibold py-1 px-3 rounded hover:bg-red-700">Delete</button>
+                                        </div>`;
                         DOMElements.depositsList.appendChild(el);
                     });
                     
