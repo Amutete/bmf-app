@@ -133,7 +133,6 @@
         };
 
         // --- TASK DATA (FIX) ---
-        // By embedding the data here, we remove the failing network request.
         const TASK_DATASET = [{"id":"captcha-1","type":"captcha","question":"Enter the following characters: 7I97UV","answer":"7I97UV"},{"id":"captcha-2","type":"captcha","question":"Enter the following characters: T1K3GJ","answer":"T1K3GJ"},{"id":"captcha-3","type":"captcha","question":"Enter the following characters: MPZEDI","answer":"MPZEDI"},{"id":"math-101","type":"math","question":"What is 12 * 12?","answer":144},{"id":"math-102","type":"math","question":"What is 25 + 75?","answer":100},{"id":"math-103","type":"math","question":"What is 100 / 4?","answer":25},{"id":"trivia-201","type":"trivia","question":"What is the capital of Kenya?","options":["Mombasa","Nairobi","Kisumu"],"correctIndex":1},{"id":"trivia-202","type":"trivia","question":"Which planet is known as the Red Planet?","options":["Earth","Mars","Jupiter"],"correctIndex":1},{"id":"trivia-203","type":"trivia","question":"Who wrote 'Romeo and Juliet'?","options":["Charles Dickens","William Shakespeare","Jane Austen"],"correctIndex":1},{"id":"review-301","type":"review","question":"Write a short positive review (at least 10 words) for a fictional new smartphone.","minWords":10},{"id":"review-302","type":"review","question":"Write a short critical review (at least 10 words) for a fictional movie you didn't like.","minWords":10},{"id":"proofreading-401","type":"proofreading","question":"Correct the following sentence: 'She dont like going to the market.'","answer":"She doesn't like going to the market."},{"id":"proofreading-402","type":"proofreading","question":"Correct the following sentence: 'Their going to there house.'","answer":"They're going to their house."}];
 
         const TASK_TIME_LIMIT = 30 * 60; // 30 minutes in seconds
@@ -154,6 +153,11 @@
             authContainer: document.getElementById('auth-container'),
             appContainer: document.getElementById('app-container'),
             workContent: document.getElementById('work-content'),
+            loginForm: document.getElementById('login-form'),
+            signupForm: document.getElementById('signup-form'),
+            errorMessage: document.getElementById('error-message'),
+            loginTabBtn: document.getElementById('login-tab-btn'),
+            signupTabBtn: document.getElementById('signup-tab-btn'),
         };
 
         // --- INITIALIZATION ---
@@ -161,7 +165,6 @@
             app = initializeApp(firebaseConfig);
             auth = getAuth(app);
             db = getFirestore(app);
-            // We no longer fetch tasks, we load them directly
             allTasks = TASK_DATASET;
             categorizeTasks();
             setupEventListeners();
@@ -206,17 +209,16 @@
                 if (doc.exists()) {
                     currentUserData = { id: doc.id, ...doc.data() };
                     updateUIWithUserData(currentUserData);
-
-                    // --- FIX START ---
-                    // This block ensures that if the user data updates while the user is on the 'work' page,
-                    // the page is re-rendered to show the new tasks. This solves the "stuck spinner" issue.
+                    
                     const activePage = document.querySelector('.nav-item.active')?.dataset.page;
                     if (activePage === 'work') {
                         renderWorkPage();
                     }
-                    // --- FIX END ---
 
                     await checkAndAssignDailyTasks();
+                } else {
+                    console.error(`User document for UID ${user.uid} does not exist in Firestore! This might happen if sign-up was interrupted.`);
+                    showMessage('Could not find user profile!', 'error');
                 }
             });
         }
@@ -225,6 +227,9 @@
         function updateUIWithUserData(userData) {
             document.getElementById('user-name-display').textContent = userData.username;
             document.getElementById('total-assets-display').textContent = `Ksh ${userData.totalAssets.toFixed(2)}`;
+            document.getElementById('my-username').textContent = userData.username;
+            document.getElementById('my-email').textContent = userData.email;
+            document.getElementById('my-userid').textContent = userData.id;
         }
 
         // --- TASK LOGIC ---
@@ -254,15 +259,13 @@
                 const assignedTaskIds = new Set();
                 const categories = Object.keys(categorizedTasks);
                 
-                // Shuffle categories to get different task types at the start
                 for (let i = categories.length - 1; i > 0; i--) {
                     const j = Math.floor(Math.random() * (i + 1));
                     [categories[i], categories[j]] = [categories[j], categories[i]];
                 }
 
                 for (let i = 0; i < level.tasks; i++) {
-                    let task;
-                    let attempts = 0;
+                    let task, attempts = 0;
                     do {
                         const category = categories[i % categories.length];
                         const categoryTasks = categorizedTasks[category];
@@ -274,20 +277,17 @@
 
                     if (task && !assignedTaskIds.has(task.id)) {
                         assignedTaskIds.add(task.id);
-                        newTasks.push({
-                            taskId: task.id,
-                            status: 'pending',
-                            attemptsLeft: 2,
-                        });
+                        newTasks.push({ taskId: task.id, status: 'pending', attemptsLeft: 2 });
                     }
                 }
 
-                const dailyTaskData = {
-                    date: todaysDate,
-                    tasks: newTasks,
-                    isCompleted: false // Mark the day as not completed
-                };
-                await updateDoc(userDocRef, { dailyTasks: dailyTaskData });
+                const dailyTaskData = { date: todaysDate, tasks: newTasks, isCompleted: false };
+                try {
+                    await updateDoc(userDocRef, { dailyTasks: dailyTaskData });
+                } catch (error) {
+                    console.error("Error assigning daily tasks:", error);
+                    showMessage("Failed to assign tasks. Check permissions.", 'error');
+                }
             }
         }
 
@@ -316,7 +316,6 @@
         
         function renderCurrentTask() {
             if (currentTaskIndex === -1) {
-                // All tasks have been attempted, show completion screen
                 renderCompletionScreen();
                 return;
             }
@@ -338,33 +337,20 @@
                             <p id="task-attempts" class="text-sm text-gray-500">${task.attemptsLeft} attempts left</p>
                         </div>
                     </div>
-                    <div class="mb-4 min-h-[60px]">
-                        <p id="task-question" class="text-gray-700 text-lg">${taskData.question}</p>
-                    </div>
+                    <div class="mb-4 min-h-[60px]"><p id="task-question" class="text-gray-700 text-lg">${taskData.question}</p></div>
                     <div id="task-answer-area" class="space-y-3"></div>
-                    <div class="mt-6">
-                        <button id="submit-task-btn" class="w-full bg-orange-500 text-white font-bold py-3 px-4 rounded-lg hover:bg-orange-600 transition shadow-lg">Submit Answer</button>
-                    </div>
+                    <div class="mt-6"><button id="submit-task-btn" class="w-full bg-orange-500 text-white font-bold py-3 px-4 rounded-lg hover:bg-orange-600 transition shadow-lg">Submit Answer</button></div>
                 </div>
             `;
             
             const answerArea = document.getElementById('task-answer-area');
             switch(taskData.type) {
                 case 'math': case 'captcha': case 'proofreading':
-                    answerArea.innerHTML = `<input type="text" id="task-answer-input" class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500">`;
-                    break;
+                    answerArea.innerHTML = `<input type="text" id="task-answer-input" class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500">`; break;
                 case 'review':
-                     answerArea.innerHTML = `<textarea id="task-answer-input" rows="4" class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500" placeholder="Write at least ${taskData.minWords} words."></textarea>`;
-                    break;
+                     answerArea.innerHTML = `<textarea id="task-answer-input" rows="4" class="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500" placeholder="Write at least ${taskData.minWords} words."></textarea>`; break;
                 case 'trivia':
-                    const optionsHtml = taskData.options.map((option, index) => `
-                        <label class="flex items-center space-x-3 p-3 rounded-md hover:bg-gray-100 cursor-pointer border border-gray-200">
-                            <input type="radio" name="trivia-option" value="${index}" class="form-radio h-5 w-5 text-orange-600">
-                            <span class="text-gray-700">${option}</span>
-                        </label>
-                    `).join('');
-                    answerArea.innerHTML = `<div id="task-answer-input" class="space-y-2">${optionsHtml}</div>`;
-                    break;
+                    answerArea.innerHTML = `<div id="task-answer-input" class="space-y-2">${taskData.options.map((option, index) => `<label class="flex items-center space-x-3 p-3 rounded-md hover:bg-gray-100 cursor-pointer border border-gray-200"><input type="radio" name="trivia-option" value="${index}" class="form-radio h-5 w-5 text-orange-600"><span class="text-gray-700">${option}</span></label>`).join('')}</div>`; break;
             }
             
             document.getElementById('submit-task-btn').addEventListener('click', submitTaskAnswer);
@@ -376,50 +362,28 @@
              const allPassed = tasks.every(t => t.status === 'completed');
              const levelKey = `level-${currentUserData.investmentLevel}`;
              const level = INVESTMENT_LEVELS[levelKey];
-             
-             let summaryHtml = tasks.map((task, index) => {
-                const icon = task.status === 'completed' ? '<i class="fas fa-check-circle text-green-500"></i>' : '<i class="fas fa-times-circle text-red-500"></i>';
-                return `<li class="flex justify-between items-center py-2"><span>Task ${index + 1}</span><span class="font-bold">${icon} ${task.status}</span></li>`;
-             }).join('');
-             
+             let summaryHtml = tasks.map((task, index) => `<li class="flex justify-between items-center py-2"><span>Task ${index + 1}</span><span class="font-bold">${task.status === 'completed' ? '<i class="fas fa-check-circle text-green-500"></i>' : '<i class="fas fa-times-circle text-red-500"></i>'} ${task.status}</span></li>`).join('');
              let resultMessage = allPassed 
                 ? `<div class="text-center p-4 bg-green-100 text-green-800 rounded-lg"><h4 class="font-bold text-xl">Congratulations!</h4><p>All tasks passed. You will be awarded Ksh ${level.maxDaily.toFixed(2)}.</p></div>`
                 : `<div class="text-center p-4 bg-red-100 text-red-800 rounded-lg"><h4 class="font-bold text-xl">Tasks Failed</h4><p>You did not complete all tasks successfully. You will receive no reward for today.</p></div>`;
 
-             DOMElements.workContent.innerHTML = `
-                <div class="bg-white rounded-2xl shadow-xl p-6 w-full">
-                    <h3 class="font-bold text-xl text-gray-800 mb-4">Daily Summary</h3>
-                    ${resultMessage}
-                    <ul class="divide-y divide-gray-200 my-4">${summaryHtml}</ul>
-                    <button id="finalize-day-btn" class="w-full bg-green-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-green-700 transition shadow-lg">Complete Day's Work</button>
-                </div>
-             `;
+             DOMElements.workContent.innerHTML = `<div class="bg-white rounded-2xl shadow-xl p-6 w-full"><h3 class="font-bold text-xl text-gray-800 mb-4">Daily Summary</h3>${resultMessage}<ul class="divide-y divide-gray-200 my-4">${summaryHtml}</ul><button id="finalize-day-btn" class="w-full bg-green-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-green-700 transition shadow-lg">Complete Day's Work</button></div>`;
              document.getElementById('finalize-day-btn').addEventListener('click', finalizeDailyTasks);
         }
 
         function startTaskTimer() {
             let timeLeft = TASK_TIME_LIMIT;
             const timerEl = document.getElementById('task-timer');
-            
             if (taskTimerInterval) clearInterval(taskTimerInterval);
-
             taskTimerInterval = setInterval(() => {
                 timeLeft--;
-                const minutes = Math.floor(timeLeft / 60);
-                const seconds = timeLeft % 60;
-                if (timerEl) {
-                    timerEl.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-                }
-
+                const minutes = Math.floor(timeLeft / 60), seconds = timeLeft % 60;
+                if (timerEl) timerEl.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
                 if (timeLeft <= WARNING_TIME && timerEl) {
                     timerEl.classList.add('timer-warning');
                     if(timeLeft % 3 === 0) playWarningSound();
                 }
-
-                if (timeLeft <= 0) {
-                    clearInterval(taskTimerInterval);
-                    handleTaskFailure("Time's up!");
-                }
+                if (timeLeft <= 0) { clearInterval(taskTimerInterval); handleTaskFailure("Time's up!"); }
             }, 1000);
         }
 
@@ -429,46 +393,22 @@
 
             const task = currentUserData.dailyTasks.tasks[currentTaskIndex];
             const taskData = allTasks.find(t => t.id === task.taskId);
-            let userAnswer;
-            let isCorrect = false;
+            let userAnswer, isCorrect = false;
 
             switch(taskData.type) {
-                case 'math':
-                    userAnswer = document.getElementById('task-answer-input').value;
-                    isCorrect = Number(userAnswer) === taskData.answer;
-                    break;
-                case 'captcha': case 'proofreading':
-                    userAnswer = document.getElementById('task-answer-input').value.trim();
-                    isCorrect = userAnswer.toLowerCase() === taskData.answer.toLowerCase();
-                    break;
-                case 'review':
-                    userAnswer = document.getElementById('task-answer-input').value.trim();
-                    const wordCount = userAnswer.split(/\s+/).filter(word => word.length > 0).length;
-                    isCorrect = wordCount >= taskData.minWords;
-                    break;
-                case 'trivia':
-                    const selectedOption = document.querySelector('input[name="trivia-option"]:checked');
-                    if (selectedOption) {
-                        userAnswer = selectedOption.value;
-                        isCorrect = Number(userAnswer) === taskData.correctIndex;
-                    }
-                    break;
+                case 'math': userAnswer = document.getElementById('task-answer-input').value; isCorrect = Number(userAnswer) === taskData.answer; break;
+                case 'captcha': case 'proofreading': userAnswer = document.getElementById('task-answer-input').value.trim(); isCorrect = userAnswer.toLowerCase() === taskData.answer.toLowerCase(); break;
+                case 'review': userAnswer = document.getElementById('task-answer-input').value.trim(); const wordCount = userAnswer.split(/\s+/).filter(Boolean).length; isCorrect = wordCount >= taskData.minWords; break;
+                case 'trivia': const selected = document.querySelector('input[name="trivia-option"]:checked'); if (selected) { userAnswer = selected.value; isCorrect = Number(userAnswer) === taskData.correctIndex; } break;
             }
-
-            if (isCorrect) {
-                await handleTaskSuccess();
-            } else {
-                await handleTaskFailure('Incorrect answer.');
-            }
+            if (isCorrect) await handleTaskSuccess(); else await handleTaskFailure('Incorrect answer.');
         }
 
         async function handleTaskSuccess() {
             clearInterval(taskTimerInterval);
             let updatedTasks = [...currentUserData.dailyTasks.tasks];
             updatedTasks[currentTaskIndex].status = 'completed';
-            
             await updateDoc(doc(db, "users", auth.currentUser.uid), { 'dailyTasks.tasks': updatedTasks });
-            
             showMessage('Correct!', 'success');
             moveToNextTask();
         }
@@ -494,110 +434,98 @@
         
         function moveToNextTask() {
             const container = document.querySelector('.task-container');
-            if (container) {
-                container.style.opacity = 0;
-            }
+            if (container) container.style.opacity = 0;
             setTimeout(() => {
                 currentTaskIndex = currentUserData.dailyTasks.tasks.findIndex(task => task.status === 'pending');
                 renderCurrentTask();
-            }, 300); // Wait for fade out
+            }, 300);
         }
         
         async function finalizeDailyTasks() {
-            const tasks = currentUserData.dailyTasks.tasks;
-            const allPassed = tasks.every(t => t.status === 'completed');
-            const levelKey = `level-${currentUserData.investmentLevel}`;
-            const level = INVESTMENT_LEVELS[levelKey];
+            const tasks = currentUserData.dailyTasks.tasks, allPassed = tasks.every(t => t.status === 'completed');
+            const levelKey = `level-${currentUserData.investmentLevel}`, level = INVESTMENT_LEVELS[levelKey];
             const userDocRef = doc(db, "users", auth.currentUser.uid);
-
             const batch = writeBatch(db);
             
             if(allPassed && level) {
                 const reward = level.maxDaily;
-                batch.update(userDocRef, {
-                    totalAssets: increment(reward),
-                    taskProfits: increment(reward)
-                });
-                const transactionsColRef = collection(db, "users", auth.currentUser.uid, "transactions");
-                batch.set(doc(transactionsColRef), {
-                    amount: reward,
-                    type: 'Daily Task Reward',
-                    timestamp: serverTimestamp(),
-                    details: `Completed all tasks for ${getTodaysDateString()}`
-                });
+                batch.update(userDocRef, { totalAssets: increment(reward), taskProfits: increment(reward) });
+                const txRef = doc(collection(db, "users", auth.currentUser.uid, "transactions"));
+                batch.set(txRef, { amount: reward, type: 'Daily Task Reward', timestamp: serverTimestamp(), details: `Completed all tasks for ${getTodaysDateString()}`});
             }
             
             batch.update(userDocRef, { 'dailyTasks.isCompleted': true });
-            await batch.commit();
-
-            if (allPassed) {
-                showMessage('Daily reward has been added to your assets!', 'success');
-            } else {
-                showMessage('Tasks for today are now closed.', 'error');
+            try {
+                await batch.commit();
+                showMessage(allPassed ? 'Daily reward has been added!' : 'Tasks for today are now closed.', allPassed ? 'success' : 'error');
+            } catch (error) {
+                console.error("Error finalizing tasks:", error);
+                showMessage("Failed to save progress. Check permissions.", 'error');
             }
-            renderWorkPage(); // Re-render to show completion message
+            renderWorkPage();
         }
 
         function playWarningSound() {
-            if (!audioCtx) {
-                try {
-                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                } catch (e) {
-                    console.error("Web Audio API is not supported in this browser");
-                    return;
-                }
-            }
-            const oscillator = audioCtx.createOscillator();
-            const gainNode = audioCtx.createGain();
-            oscillator.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
-            oscillator.type = 'sine';
-            oscillator.frequency.setValueAtTime(880, audioCtx.currentTime);
-            gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
-            oscillator.start();
-            oscillator.stop(audioCtx.currentTime + 0.1);
+            if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { console.error("Web Audio API not supported"); return; }}
+            const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.type = 'sine'; osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.1);
         }
 
-        // --- PAGE NAVIGATION ---
         function switchPage(pageId) {
             document.querySelectorAll('main > div').forEach(page => page.classList.add('hidden'));
             document.getElementById(`page-${pageId}`).classList.remove('hidden');
             document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
             document.querySelector(`.nav-item[data-page="${pageId}"]`).classList.add('active');
-            
-            if (pageId === 'work' && auth.currentUser) {
-                renderWorkPage();
-            }
+            if (pageId === 'work' && auth.currentUser) renderWorkPage();
         }
         
-        // --- UTILITY FUNCTIONS ---
         function showMessage(message, type = 'success') {
-            const modal = document.getElementById('message-modal');
-            const text = document.getElementById('message-modal-text');
-            modal.className = 'hidden';
-            void modal.offsetWidth;
-            text.textContent = message;
-            modal.classList.remove('hidden');
-            modal.classList.add('fixed', 'top-5', 'right-5', 'text-white', 'py-2', 'px-4', 'rounded-lg', 'shadow-xl', 'z-50', 'animate-pulse');
-            modal.classList.toggle('bg-red-500', type === 'error');
-            modal.classList.toggle('bg-green-500', type !== 'error');
+            const modal = document.getElementById('message-modal'), text = document.getElementById('message-modal-text');
+            modal.className = 'hidden'; void modal.offsetWidth; text.textContent = message;
+            modal.className = `fixed top-5 right-5 text-white py-2 px-4 rounded-lg shadow-xl z-50 animate-pulse ${type === 'error' ? 'bg-red-500' : 'bg-green-500'}`;
             setTimeout(() => { modal.classList.add('hidden'); }, 3000);
         }
 
-        // --- EVENT LISTENERS ---
         function setupEventListeners() {
-            document.querySelectorAll('.nav-item').forEach(button => {
-                button.addEventListener('click', () => switchPage(button.dataset.page));
+            document.querySelectorAll('.nav-item').forEach(button => button.addEventListener('click', () => switchPage(button.dataset.page)));
+            DOMElements.loginTabBtn.addEventListener('click', () => {
+                DOMElements.loginTabBtn.classList.add('border-orange-500', 'text-orange-500');
+                DOMElements.signupTabBtn.classList.remove('border-orange-500', 'text-orange-500');
+                DOMElements.loginForm.classList.remove('hidden'); DOMElements.signupForm.classList.add('hidden');
             });
-            const loginForm = document.getElementById('login-form');
-            loginForm.addEventListener('submit', e => {
+            DOMElements.signupTabBtn.addEventListener('click', () => {
+                DOMElements.signupTabBtn.classList.add('border-orange-500', 'text-orange-500');
+                DOMElements.loginTabBtn.classList.remove('border-orange-500', 'text-orange-500');
+                DOMElements.signupForm.classList.remove('hidden'); DOMElements.loginForm.classList.add('hidden');
+            });
+
+            DOMElements.loginForm.addEventListener('submit', e => {
                 e.preventDefault();
-                signInWithEmailAndPassword(auth, loginForm['login-email'].value, loginForm['login-password'].value).catch(err => showMessage(err.message, 'error'));
+                signInWithEmailAndPassword(auth, DOMElements.loginForm['login-email'].value, DOMElements.loginForm['login-password'].value).catch(err => showMessage(err.code, 'error'));
             });
+
+            DOMElements.signupForm.addEventListener('submit', async e => {
+                e.preventDefault();
+                const username = DOMElements.signupForm['signup-username'].value, email = DOMElements.signupForm['signup-email'].value;
+                const password = DOMElements.signupForm['signup-password'].value, confirm = DOMElements.signupForm['signup-confirm-password'].value;
+                if (password.length < 6) { showMessage('Password must be at least 6 characters.', 'error'); return; }
+                if (password !== confirm) { showMessage('Passwords do not match.', 'error'); return; }
+                
+                try {
+                    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                    await setDoc(doc(db, "users", userCredential.user.uid), {
+                        username: username, email: email, totalAssets: 0, taskProfits: 0, referralBonuses: 0,
+                        investmentLevel: 'None', createdAt: serverTimestamp()
+                    });
+                } catch (err) { showMessage(err.code, 'error'); }
+            });
+
             document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
         }
 
-        // --- APP ENTRY POINT ---
         initApp();
     </script>
 </body>
