@@ -141,6 +141,10 @@
             'None': { investment: 0, tasks: 0, maxDaily: 0 }
         };
 
+        // --- TASK DATA (FIX) ---
+        // By embedding the data here, we remove the failing network request.
+        const TASK_DATASET = [{"id":"captcha-1","type":"captcha","question":"Enter the following characters: 7I97UV","answer":"7I97UV"},{"id":"captcha-2","type":"captcha","question":"Enter the following characters: T1K3GJ","answer":"T1K3GJ"},{"id":"captcha-3","type":"captcha","question":"Enter the following characters: MPZEDI","answer":"MPZEDI"},{"id":"math-101","type":"math","question":"What is 12 * 12?","answer":144},{"id":"math-102","type":"math","question":"What is 25 + 75?","answer":100},{"id":"math-103","type":"math","question":"What is 100 / 4?","answer":25},{"id":"trivia-201","type":"trivia","question":"What is the capital of Kenya?","options":["Mombasa","Nairobi","Kisumu"],"correctIndex":1},{"id":"trivia-202","type":"trivia","question":"Which planet is known as the Red Planet?","options":["Earth","Mars","Jupiter"],"correctIndex":1},{"id":"trivia-203","type":"trivia","question":"Who wrote 'Romeo and Juliet'?","options":["Charles Dickens","William Shakespeare","Jane Austen"],"correctIndex":1},{"id":"review-301","type":"review","question":"Write a short positive review (at least 10 words) for a fictional new smartphone.","minWords":10},{"id":"review-302","type":"review","question":"Write a short critical review (at least 10 words) for a fictional movie you didn't like.","minWords":10},{"id":"proofreading-401","type":"proofreading","question":"Correct the following sentence: 'She dont like going to the market.'","answer":"She doesn't like going to the market."},{"id":"proofreading-402","type":"proofreading","question":"Correct the following sentence: 'Their going to there house.'","answer":"They're going to their house."}];
+
         const TASK_TIME_LIMIT = 30 * 60; // 30 minutes in seconds
         const WARNING_TIME = 5 * 60; // 5 minutes in seconds
 
@@ -166,24 +170,18 @@
             app = initializeApp(firebaseConfig);
             auth = getAuth(app);
             db = getFirestore(app);
-            loadTasks();
+            // We no longer fetch tasks, we load them directly
+            allTasks = TASK_DATASET;
+            categorizeTasks();
             setupEventListeners();
             handleAuthentication();
         }
 
-        async function loadTasks() {
-            try {
-                const response = await fetch('./work_tasks_dataset.json');
-                if (!response.ok) throw new Error('Network response was not ok.');
-                allTasks = await response.json();
-                categorizeTasks();
-            } catch (error) {
-                console.error("Failed to load tasks:", error);
-                DOMElements.workContent.innerHTML = `<p class="text-red-500">Error loading tasks. Please try again later.</p>`;
-            }
-        }
-
         function categorizeTasks() {
+            if (!allTasks || allTasks.length === 0) {
+                console.error("Task dataset is empty or not loaded.");
+                return;
+            }
             categorizedTasks = allTasks.reduce((acc, task) => {
                 if (!acc[task.type]) {
                     acc[task.type] = [];
@@ -267,6 +265,7 @@
                     do {
                         const category = categories[i % categories.length];
                         const categoryTasks = categorizedTasks[category];
+                        if (!categoryTasks || categoryTasks.length === 0) continue;
                         const randomIndex = Math.floor(Math.random() * categoryTasks.length);
                         task = categoryTasks[randomIndex];
                         attempts++;
