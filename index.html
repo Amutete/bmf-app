@@ -206,6 +206,16 @@
                 if (doc.exists()) {
                     currentUserData = { id: doc.id, ...doc.data() };
                     updateUIWithUserData(currentUserData);
+
+                    // --- FIX START ---
+                    // This block ensures that if the user data updates while the user is on the 'work' page,
+                    // the page is re-rendered to show the new tasks. This solves the "stuck spinner" issue.
+                    const activePage = document.querySelector('.nav-item.active')?.dataset.page;
+                    if (activePage === 'work') {
+                        renderWorkPage();
+                    }
+                    // --- FIX END ---
+
                     await checkAndAssignDailyTasks();
                 }
             });
